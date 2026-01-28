@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>C5 Wallet</title>
+</head>
+
+<!--
+  以下のブロックは HTMLのBody部分です。家計簿ミニアプリのHTMLファイルです。
+  一度、ブラウザで表示してみてください。
+
+  【タスク1】 LPで学んだ知識をもとに、デザインなど編集してみてください。
+
+  -->
+<body>
+  <class="container">
+   <h1>C5 Wallet</h1>
+    <div class="form-group">
+        <label>ユーザー名</label>
+        <input type="text" id= "user" placeholder="例：リジチョー">
+    </div>
+
+    <div class="form-group">
+        <label>アイテム名</label>
+        <input type="text" placeholder="例：コーヒー">
+    </div>
+
+    <div class="form-group">
+        <label>金額</label>
+        <input type="text" placeholder="例：500">
+    </div>
+
+    <div class="form-group">
+        <label>予算</label>
+        <input type="text" placeholder="例：30000">
+    </div>
+
+  <!--
+    「送信」: 入力した user/item/price を FastAPI に送って、CSVに保存してもらう
+    「分析」: user を送って、合計金額を計算してもらう
+  -->
+  <div class="button-area">
+    <button id="sendBtn">記録して送信</button>
+    <button id="historyBtn">履歴を見る</button>
+  </div>  
+
+  <hr>
+  
+  <div class="analysis-section">
+    <h2>AIコーチング分析</h2>
+    <div class="coach-buttons">
+      <button id="analyze-oniBtn">👺鬼コーチ</button>
+      <button id="analyze-tenshiBtn">👼天使コーチ</button>
+    </div>
+  </div>
+    
+  
+
+  <!-- 
+    APIの結果（メッセージ）を表示する場所
+    何も入っていないように見えますが、JavaScriptでFAST APIから取ってきた文字が書き加えられます。
+  -->
+    <div class="result-card">
+      <div id="result" class="result-message">ここにアドバイスが表示されます
+      </div>
+    </div>
+
+
+
+<!--
+  以下のブロックは Javascriptです。
+  上のHTML Bodyで'id'を指定した指示した部分の値を読み取ったり、文字を埋め込んだりできます。
+  大まかに何をしているかつかめれば、細かい部分は気にしなくても大丈夫です。
+  分析結果を受け取る部分が未完成なので、タスク2の部分を修正してください。
+-->
+
+  <script>
+    // ---------------------------
+    // 1) HTML要素を取得する
+    // ---------------------------
+    // データを送受信できるように、画面に入力された・出力する値を変数にしています。
+    const userData = document.getElementById("user");
+    const itemData = document.getElementById("item");
+    const priceData = document.getElementById("price");
+    const resultData = document.getElementById("result");
+
+    // ---------------------------
+    // 2) 「送信」ボタンの処理
+    // ---------------------------
+    // addEventListener("click", ...) でボタンが押されたときの処理を登録します。
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+      // 入力値をJSONとしてまとめます（FastAPIへ送るデータ）
+      // price は文字列ではなく数値として送りたいので Number(...) で変換します。
+      const body = {
+        user: userData.value,
+        item: itemData.value,
+        price: Number(priceData.value),
+      };
+
+      // fetch() で FastAPI にリクエストを送ります。
+      // method: "POST" でPOST送信
+      // headers: JSONを送るので Content-Type を application/json にします
+      // body: JSON文字列にするため JSON.stringify を使います
+      const res = await fetch("/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      // FastAPIから返ってくるJSON（例: {"message": "..."}）を読む
+      const json_data = await res.json();
+
+      // 画面に結果メッセージを表示
+      resultData.textContent = json_data.message;
+    });
+
+
+    // ---------------------------
+    // 3) 「鬼コーチ」ボタンの処理
+    // ---------------------------
+    document.getElementById("analyze-oniBtn").addEventListener("click", async () => {
+
+      // ユーザー名を取得
+      user = userData.value
+
+      // リクエストを送る
+      const res = await fetch(`/analyze?user=${user}&coach=oni`, {
+        method: "GET",
+      });
+
+      const analyzed_data = await res.json();
+      // 画面に合計結果を表示
+      resultData.textContent = analyzed_data.message;
+    });
+
+    // ---------------------------
+    // 3) 「天使コーチ」ボタンの処理
+    // ---------------------------
+    document.getElementById("analyze-tenshiBtn").addEventListener("click", async () => {
+
+      // ユーザー名を取得
+      user = userData.value
+
+      // リクエストを送る
+      const res = await fetch(`/analyze?user=${user}&coach=tenshi`, {
+        method: "GET",
+      });
+
+      const analyzed_data = await res.json();
+      // 画面に合計結果を表示
+      resultData.textContent = analyzed_data.message;
+    });
+
+</script>
+</body>
+</html>

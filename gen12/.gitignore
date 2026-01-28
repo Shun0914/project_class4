@@ -1,0 +1,4 @@
+# 余分なファイルをGitHubで公開しないようにする設定
+.env
+archive/
+__pycache__/

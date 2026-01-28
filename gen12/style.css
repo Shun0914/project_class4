@@ -1,0 +1,143 @@
+body {
+    background-color: #ffffff;
+    /* デバイスに合わせたフォント設定 */
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 20px;
+    /* 画面の真ん中に寄せたい */
+    display: flex;
+    justify-content: center;
+}
+
+/* body */
+.container {
+    width: 100%;
+    max-width: 400px; /* スマホ用 */
+    padding: 30px;
+    border-radius: 20px; /* 角を取りたい */
+}
+
+/* 各項目と入力フォーム*/
+h1 {
+    text-align: center;
+    font-size: 50px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* フォームの感覚を狭く*/
+.form-group {
+    margin-bottom: 5px;
+}
+/*　項目の文字 */
+label {
+    display: block;/*　項目と入力を改行するため */
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 3px;
+    color: #000000;
+}
+
+/* 入力欄のデザイン */
+input[type="text"] {
+    width: 100%;
+    padding: 15px;
+    background-color: #e0e0e0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box; /* ズレ防止に良いらしい */
+}
+
+#sendBtn, 
+.coach-buttons button, 
+#historyBtn:hover
+{
+    transition: all 0.2s ease;
+}
+
+#sendBtn:hover, 
+.coach-buttons button:hover, 
+#historyBtn:hover
+{
+    transform: translateY(-3px); /* 4ピクセル上に移動 */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* 影 */
+}
+
+/* 記録して送信 */
+#sendBtn {
+    width: 100%;
+    background-color: black;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 30px;
+    margin-bottom: 5px;
+}
+
+#historyBtn {
+    width: 100%;             
+    color: black;           
+    border: 2px solid black; 
+    padding: 13px;           
+    border-radius: 10px;     
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;        
+}
+
+/* 区切り線 */
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+/* AIコーチング分析  */
+.analysis-section h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* 鬼と天使を横並びにする箱 */
+.coach-buttons {
+    display: flex; /* これで横並びに */
+    gap: 10px;
+    margin-bottom: 20px;
+}
+/* ボタンの設定 */
+.coach-buttons button {
+    flex: 1;       /* 幅を均等にしたい */
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+/* 色分け */
+#analyze-oniBtn { background-color: #cd5858; } 
+#analyze-tenshiBtn { background-color: #4ca04f; } 
+
+/*アドバイス枠 */
+.result-card {
+    background-color: #e0e0e0; /* 入力欄と同じグレー */
+    padding: 20px;
+    border-radius: 10px;
+    min-height: 80px;
+    /* 中の文字を真ん中に */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #555;
+}
