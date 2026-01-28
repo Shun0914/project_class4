@@ -23,8 +23,7 @@ project_class4/
     │   └── 基本要件定義書.md
     ├── reference/       # 参考資料系
     │   ├── PROJECT_CONTEXT.md          # プロジェクトコンテキスト
-    │   ├── gen12_current_state.md      # 12期アプリの現状分析
-    │   └── cursor_github_mcp_開発レポート.md
+    │   └── gen12_current_state.md      # 12期アプリの現状分析
     └── setup/           # セットアップ関連
         ├── setup.md
         └── github_workflow.md
@@ -65,7 +64,6 @@ project_class4/
 ### 参考資料
 - [プロジェクトコンテキスト](./docs/reference/PROJECT_CONTEXT.md)
 - [12期アプリの現状分析](./docs/reference/gen12_current_state.md)
-- [Cursor + GitHub MCP開発レポート](./docs/reference/cursor_github_mcp_開発レポート.md)
 
 ### セットアップ
 - [GitHubワークフロー手順書](./docs/setup/github_workflow.md)
