@@ -67,6 +67,7 @@ project_class4/
 - [11期チームアプリ機能分析](./docs/reference/11期チームアプリ機能分析_サマリー.md)
   - [くんよみ機能分析](./docs/reference/11期チームアプリ機能分析_くんよみ.md)
   - [MOF機能分析](./docs/reference/11期チームアプリ機能分析_MOF.md)
+  - [wasabimonja機能分析](./docs/reference/11期チームアプリ機能分析_wasabimonja.md)
 
 ### セットアップ
 - [GitHubワークフロー手順書](./docs/setup/github_workflow.md)

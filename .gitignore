@@ -61,3 +61,6 @@ logs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Reference repositories (cloned for analysis)
+temp_repos/
