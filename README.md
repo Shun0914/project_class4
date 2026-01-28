@@ -64,6 +64,9 @@ project_class4/
 ### 参考資料
 - [プロジェクトコンテキスト](./docs/reference/PROJECT_CONTEXT.md)
 - [12期アプリの現状分析](./docs/reference/gen12_current_state.md)
+- [11期チームアプリ機能分析](./docs/reference/11期チームアプリ機能分析_サマリー.md)
+  - [くんよみ機能分析](./docs/reference/11期チームアプリ機能分析_くんよみ.md)
+  - [MOF機能分析](./docs/reference/11期チームアプリ機能分析_MOF.md)
 
 ### セットアップ
 - [GitHubワークフロー手順書](./docs/setup/github_workflow.md)
