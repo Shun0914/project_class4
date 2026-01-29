@@ -26,6 +26,9 @@ project_class4/
     │   └── gen12_current_state.md      # 12期アプリの現状分析
     ├── tasks/           # タスク分割・スプリント単位
     │   └── task_breakdown_sprint0.md   # Sprint 0 タスク分割
+    ├── org/              # 体制図
+    │   ├── 体制図.md
+    │   └── 体制図.png
     └── setup/           # セットアップ関連
         ├── setup.md
         └── github_workflow.md
@@ -67,6 +70,9 @@ project_class4/
 
 ### タスク
 - [Sprint 0 タスク分割](./docs/tasks/task_breakdown_sprint0.md)
+
+### 体制
+- [体制図](./docs/org/体制図.md)
 
 ### 参考資料
 - [プロジェクトコンテキスト](./docs/reference/PROJECT_CONTEXT.md)
