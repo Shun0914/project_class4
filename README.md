@@ -24,6 +24,8 @@ project_class4/
     ├── reference/       # 参考資料系
     │   ├── PROJECT_CONTEXT.md          # プロジェクトコンテキスト
     │   └── gen12_current_state.md      # 12期アプリの現状分析
+    ├── tasks/           # タスク分割・スプリント単位
+    │   └── task_breakdown_sprint0.md   # Sprint 0 タスク分割
     └── setup/           # セットアップ関連
         ├── setup.md
         └── github_workflow.md
@@ -45,21 +47,26 @@ project_class4/
 - **Issue/PR管理**: GitHub Issue/PRベースの開発フロー
 
 ## チームメンバー
-- **しゅんすけ**
-- **まっちゃん**
-- **まーP**
-- **たも**
-- **よこち**
-- **なおみん**
-- **くぼしー**
-- **つね**
-- **くまぷー**
-- **がうら**
+| ニックネーム | GitHub |
+|-------------|--------|
+| しゅんすけ | [Shun0914](https://github.com/Shun0914) |
+| まっちゃん | [maccha-n](https://github.com/maccha-n) |
+| まーP | [nomogulnolife-pixel](https://github.com/nomogulnolife-pixel) |
+| たも | [hikarumae](https://github.com/hikarumae) |
+| よこち | [Yoko-dev](https://github.com/Yoko-dev) |
+| なおみん | [Ogura-Naomi](https://github.com/Ogura-Naomi) |
+| くぼしー | [misakikuboshima](https://github.com/misakikuboshima) |
+| つね | [ryotsunekawa](https://github.com/ryotsunekawa) |
+| くまぷー | [kuma0120](https://github.com/kuma0120) |
+| がうら | [kimiyya](https://github.com/kimiyya) |
 
 ## ドキュメント
 
 ### 要件定義
 - [基本要件定義書](./docs/requirements/基本要件定義書.md)
+
+### タスク
+- [Sprint 0 タスク分割](./docs/tasks/task_breakdown_sprint0.md)
 
 ### 参考資料
 - [プロジェクトコンテキスト](./docs/reference/PROJECT_CONTEXT.md)
