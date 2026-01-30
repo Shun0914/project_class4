@@ -21,7 +21,11 @@ project_class4/
 └── docs/               # プロジェクトドキュメント
     ├── requirements/    # 要件定義書系
     │   ├── プロダクトビジョン.md   # 誰に・価値・課題（ビジネス要件）
-    │   └── 基本要件定義書.md
+    │   ├── 機能一覧.md
+    │   ├── 基本要件定義書.md
+    │   └── 非機能要件.md
+    ├── design/          # 設計書系
+    │   └── テーブル定義.md
     ├── reference/       # 参考資料系
     │   ├── PROJECT_CONTEXT.md          # プロジェクトコンテキスト
     │   └── gen12_current_state.md      # 12期アプリの現状分析
@@ -68,7 +72,12 @@ project_class4/
 
 ### 要件定義
 - [プロダクトビジョン（誰に・価値・課題）](./docs/requirements/プロダクトビジョン.md)
+- [機能一覧](./docs/requirements/機能一覧.md)
 - [基本要件定義書](./docs/requirements/基本要件定義書.md)
+- [非機能要件](./docs/requirements/非機能要件.md)
+
+### 設計
+- [テーブル定義](./docs/design/テーブル定義.md)
 
 ### タスク
 - [Sprint 0 タスク分割](./docs/tasks/task_breakdown_sprint0.md)
