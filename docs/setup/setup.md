@@ -13,8 +13,8 @@
 ## 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/Shun0914/kunyomi.git
-cd kunyomi
+git clone https://github.com/Shun0914/project_class4.git
+cd project_class4
 ```
 
 ---
@@ -25,7 +25,7 @@ cd kunyomi
 
 ```bash
 cd backend
-python3 -m venv venv
+python3 -m venv venv # Windows: python -m venv venvのこともあり
 source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
 
@@ -46,7 +46,7 @@ mysql -u root -p
 MySQLコマンドラインで以下を実行：
 
 ```sql
-CREATE DATABASE kunyomi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE project_class4_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 SHOW DATABASES;
 exit
 ```
@@ -62,7 +62,7 @@ cp .env.example .env
 `.env`ファイルを編集して、自分のMySQLの接続情報に合わせて変更：
 
 ```env
-DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/kunyomi_db
+DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/project_class4_db
 ```
 
 **重要**: `.env`ファイルには実際のパスワードを記載しますが、このファイルは`.gitignore`に含まれているため、Gitにはコミットされません。
