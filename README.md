@@ -15,9 +15,22 @@ project_class4/
 │   ├── data.csv
 │   └── README
 ├── frontend/           # フロントエンド（11期が改造・開発）
-│   └── (開発中)
+│   ├── app/                # Next.js App Router
+│   ├── components/         # 共通コンポーネント
+│   ├── lib/api/            # APIクライアント (client.ts等)
+│   ├── public/             # 静的資産
+│   ├── types/              # 型定義
+│   ├── eslint.config.mjs   # ESLint設定
+│   ├── next.config.ts      # Next.js設定
+│   ├── package.json        # Node.js依存関係
+│   ├── postcss.config.mjs  # CSSプリプロセッサ設定
+│   └── tsconfig.json       # TypeScript設定
 ├── backend/            # バックエンド（11期が改造・開発）
-│   └── (開発中)
+│   ├── alembic/            # データベース移行関連
+│   ├── app/                # アプリケーション本体
+│   ├── scripts/            # ユーティリティスクリプト
+│   ├── alembic.ini         # Alembic設定
+│   └── requirements.txt    # Pythonパッケージ依存関係
 └── docs/               # プロジェクトドキュメント
     ├── requirements/    # 要件定義書系
     │   ├── プロダクトビジョン.md   # 誰に・価値・課題（ビジネス要件）
@@ -35,7 +48,8 @@ project_class4/
     │   ├── 体制図.md
     │   └── 体制図.png
     └── setup/           # セットアップ関連
-        ├── setup.md
+        ├── setup.md      #開発環境構築手順
+        ├── db_setup.md   #TBL移行手順
         └── github_workflow.md
 ```
 
@@ -96,6 +110,7 @@ project_class4/
 ### セットアップ
 - [GitHubワークフロー手順書](./docs/setup/github_workflow.md)
 - [開発環境セットアップ手順](./docs/setup/setup.md)
+- [TBL移行手順](./docs/setup/db_setup.md)
 
 ---
 *プロジェクト開始日: 2026年1月28日*
