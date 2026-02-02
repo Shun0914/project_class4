@@ -90,6 +90,9 @@ uvicorn app.main:app --reload
 {"status":"unhealthy","database":"disconnected","error":"..."}
 ```
 
+**データベースのセットアップ**:
+データベースのセットアップ手順は、[db_setup.md](./db_setup.md)を参照すること
+
 ---
 
 ## 3. フロントエンド環境のセットアップ
