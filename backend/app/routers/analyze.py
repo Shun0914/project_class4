@@ -69,12 +69,14 @@ def analyze(
     
     # 残金計算
     remaining = (budget - total) if budget else None
-    remaining_rate = safe_divide(remaining, budget) * 100 if budget else None
+    remaining_rate = round(safe_divide(remaining, budget) * 100, 2) if budget else None
 
 
     
     # ペース率計算
     pace_rate = _calculate_pace_rate(remaining, days_remaining, budget, days_in_month)
+    if pace_rate is not None and pace_rate != float('inf'):
+        pace_rate = round(pace_rate, 3)
     
     # 一週間レポート
     end_date = today
@@ -88,7 +90,7 @@ def analyze(
     
     weekly_total = sum(e.price for e in weekly_expenses)
     weekly_count = len(weekly_expenses)
-    weekly_average = weekly_total / weekly_count if weekly_count > 0 else 0.0
+    weekly_average = round(weekly_total / weekly_count, 2) if weekly_count > 0 else 0.0
     
     # AIコーチングメッセージ生成
     coach_message = _generate_coach_message(
