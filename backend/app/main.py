@@ -1,13 +1,15 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
+from app.routers import analyze
 
 app = FastAPI(
-    title="まっちゃんウォレット(仮) API",
-    description="家計簿アプリ まっちゃんウォレット(仮) のAPI",
+    title="C4 wallet API",
+    description="家計簿アプリ C4 walletのAPI",
     version="0.1.0"
 )
 
+app.include_router(analyze.router)
 
 @app.get("/")
 def read_root():
