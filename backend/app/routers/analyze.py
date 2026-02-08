@@ -37,21 +37,23 @@ def safe_divide(numerator, denominator):
 
 @router.get("/analyze", response_model=AnalyzeResponse)
 def analyze(
-    user: str = Query(..., description="ユーザー名"),
-    coach: str = Query(..., description="コーチタイプ (oni/tenshi)"),
+    user: str = Query(..., description="ユーザー名"),  # 仮実装：認証後は削除
     db: Session = Depends(get_db)
 ):
-    """分析API（コーチング）"""
+    """分析API（コーチング）- 認証から取得予定"""
     
     # ユーザー取得
     user_obj = db.query(User).filter(User.username == user).first()
     if not user_obj:
         raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
     
+    # コーチモードを設定から取得
+    coach = user_obj.coach_mode  # URLパラメータではなく設定から取得
+    
     # 今月の期間を計算
     today = date.today()
     days_in_month = monthrange(today.year, today.month)[1]
-    days_remaining = days_in_month - today.day  # 今日を含まない残り日数
+    days_remaining = days_in_month - today.day
     
     # 今月の支出合計
     month_start = today.replace(day=1)
@@ -67,11 +69,13 @@ def analyze(
     budget_obj = db.query(Budget).filter(Budget.user_id == user_obj.id).first()
     budget = budget_obj.monthly_budget if budget_obj else None
     
+    # エンプティ状態チェック
+    has_expenses = total > 0
+    has_budget = budget is not None
+    
     # 残金計算
     remaining = (budget - total) if budget else None
     remaining_rate = round(safe_divide(remaining, budget) * 100, 2) if budget else None
-
-
     
     # ペース率計算
     pace_rate = _calculate_pace_rate(remaining, days_remaining, budget, days_in_month)
@@ -92,13 +96,15 @@ def analyze(
     weekly_count = len(weekly_expenses)
     weekly_average = round(weekly_total / weekly_count, 2) if weekly_count > 0 else 0.0
     
-    # AIコーチングメッセージ生成
+    # AIコーチングメッセージ生成（エンプティ状態を考慮）
     coach_message = _generate_coach_message(
         coach=coach,
         budget=budget,
         remaining=remaining,
         days_remaining=days_remaining,
-        pace_rate=pace_rate
+        pace_rate=pace_rate,
+        has_expenses=has_expenses,
+        has_budget=has_budget
     )
     
     return AnalyzeResponse(
@@ -110,6 +116,8 @@ def analyze(
         pace_rate=pace_rate,
         coach_type=coach,
         coach_message=coach_message,
+        has_expenses=has_expenses,  # エンプティ状態フラグ
+        has_budget=has_budget,      # エンプティ状態フラグ
         weekly_report=WeeklyReport(
             start_date=start_date,
             end_date=end_date,
@@ -118,6 +126,7 @@ def analyze(
             average=weekly_average
         )
     )
+
 
 
 def _calculate_pace_rate(
@@ -158,25 +167,33 @@ def _generate_coach_message(
     budget: int | None,
     remaining: int | None,
     days_remaining: int,
-    pace_rate: float | None
+    pace_rate: float | None,
+    has_expenses: bool,
+    has_budget: bool
 ) -> str:
     """
-    コーチングメッセージ生成（ペース率と残り日数を考慮）
-    
-    ペース率の目安:
-    - 1.5以上: かなり余裕
-    - 1.0〜1.5: 順調
-    - 0.5〜1.0: やや使いすぎ
-    - 0.5未満: 危険
+    コーチングメッセージ生成（エンプティ状態を考慮）
     """
     emoji = "👹" if coach == "oni" else "👼"
     is_oni = coach == "oni"
     
-    # 予算未設定
-    if budget is None:
+    # エンプティ状態: 予算も支出もない
+    if not has_budget and not has_expenses:
         if is_oni:
-            return f"{emoji} 予算も設定せずに何をしている！まずは予算を決めろ！"
-        return f"{emoji} まずは予算を設定してみよう！一緒に頑張ろうね"
+            return f"{emoji} 何も始まっていないぞ！まずは予算を設定して支出を記録しろ！"
+        return f"{emoji} まずは予算を設定して、支出を記録してみよう！"
+    
+    # エンプティ状態: 予算はあるが支出がない
+    if has_budget and not has_expenses:
+        if is_oni:
+            return f"{emoji} 予算は設定したな。さあ、支出を記録し始めろ！"
+        return f"{emoji} 予算が設定されたね！支出を記録して管理を始めよう！"
+    
+    # エンプティ状態: 支出はあるが予算がない
+    if not has_budget and has_expenses:
+        if is_oni:
+            return f"{emoji} 支出だけ記録して予算がないとは...まずは予算を決めろ！"
+        return f"{emoji} 支出を記録してるね！予算も設定すると管理しやすくなるよ！"
     
     # 最終日（残り0日以下）
     if days_remaining <= 0:
@@ -227,7 +244,6 @@ def _generate_coach_message(
 @router.get("/ai-analyze", response_model=AIAnalyzeResponse)
 def ai_analyze(
     user: str = Query(..., description="ユーザー名"),
-    coach: str = Query(..., description="コーチタイプ (oni/tenshi)"),
     db: Session = Depends(get_db)
 ):
     """AI分析API（OpenAI統合）"""
@@ -235,6 +251,8 @@ def ai_analyze(
     user_obj = db.query(User).filter(User.username == user).first()
     if not user_obj:
         raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
+    # コーチモードを設定から取得
+    coach = user_obj.coach_mod
     
     # 今月の支出合計
     today = date.today()

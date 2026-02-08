@@ -14,16 +14,18 @@ class WeeklyReport(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    """分析APIレスポンス"""
     user: str
     total: int
-    budget: Optional[int]
-    remaining: Optional[int]
-    remaining_rate: Optional[float]
-    pace_rate: Optional[float]
+    budget: int | None
+    remaining: int | None
+    remaining_rate: float | None
+    pace_rate: float | None
     coach_type: str
     coach_message: str
+    has_expenses: bool
+    has_budget: bool
     weekly_report: WeeklyReport
+
 
 class AIAnalyzeResponse(BaseModel):
     """AI分析APIレスポンス"""

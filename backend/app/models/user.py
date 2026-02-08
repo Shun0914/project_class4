@@ -11,6 +11,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(255), unique=True, nullable=False)
+    coach_mode = Column(String(10), nullable=False, default="tenshi") 
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
@@ -21,4 +22,4 @@ class User(Base):
     detection_histories = relationship("DetectionHistory", back_populates="user")
 
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}')>"
+        return f"<User(id={self.id}, username='{self.username}', coach_mode='{self.coach_mode}')>"
