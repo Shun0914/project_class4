@@ -3,6 +3,8 @@ from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKe
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db import Base
+from datetime import date
+from pydantic import BaseModel
 
 
 class Expense(Base):
@@ -31,3 +33,10 @@ class Expense(Base):
 
     def __repr__(self):
         return f"<Expense(id={self.id}, item='{self.item}', price={self.price})>"
+
+
+class ExpenseCreateRequest(BaseModel):
+    item: str
+    category_id: str
+    price: int
+    expense_date: date
