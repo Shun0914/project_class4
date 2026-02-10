@@ -7,18 +7,6 @@ export interface User {
   coach_mode: string;
 }
 
-/** サインアップリクエスト */
-export interface SignupRequest {
-  username: string;
-  password: string;
-}
-
-/** ログインリクエスト */
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
 /** トークンレスポンス */
 export interface TokenResponse {
   access_token: string;
@@ -40,12 +28,6 @@ export interface UpdateProfileRequest {
   coach_mode?: string;
 }
 
-/** パスワード変更リクエスト */
-export interface ChangePasswordRequest {
-  current_password: string;
-  new_password: string;
-}
-
 /** Google認証リクエスト */
 export interface GoogleAuthRequest {
   access_token: string;
@@ -55,11 +37,8 @@ export interface GoogleAuthRequest {
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (data: LoginRequest) => Promise<void>;
-  signup: (data: SignupRequest) => Promise<void>;
   googleLogin: (accessToken: string) => Promise<void>;
   setupProfile: (data: SetupRequest) => Promise<void>;
   updateProfile: (data: UpdateProfileRequest) => Promise<void>;
-  changePassword: (data: ChangePasswordRequest) => Promise<void>;
   logout: () => void;
 }

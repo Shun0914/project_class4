@@ -7,55 +7,13 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
-from app.schemas.auth import SignupRequest, LoginRequest, GoogleAuthRequest, SetupRequest, UpdateProfileRequest, ChangePasswordRequest, TokenResponse, UserResponse
+from app.schemas.auth import GoogleAuthRequest, SetupRequest, UpdateProfileRequest, TokenResponse, UserResponse
 from app.core.security import (
-    get_password_hash,
-    verify_password,
     create_access_token,
     get_current_user,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["認証"])
-
-
-@router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def signup(request: SignupRequest, db: Session = Depends(get_db)):
-    """新規ユーザー登録"""
-    # ユーザー名の重複チェック
-    existing_user = db.query(User).filter(User.username == request.username).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="このユーザー名は既に使用されています",
-        )
-
-    # ユーザー作成
-    hashed_password = get_password_hash(request.password)
-    new_user = User(
-        username=request.username,
-        password_hash=hashed_password,
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    # トークン生成して返却（サインアップ後そのままログイン状態にする）
-    access_token = create_access_token(data={"sub": str(new_user.id)})
-    return TokenResponse(access_token=access_token)
-
-
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    """ログイン"""
-    user = db.query(User).filter(User.username == request.username).first()
-    if not user or not user.password_hash or not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="ユーザー名またはパスワードが正しくありません",
-        )
-
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return TokenResponse(access_token=access_token)
 
 
 @router.post("/google", response_model=TokenResponse)
@@ -149,24 +107,6 @@ def update_profile(request: UpdateProfileRequest, current_user: User = Depends(g
     db.commit()
     db.refresh(current_user)
     return current_user
-
-
-@router.post("/change-password")
-def change_password(request: ChangePasswordRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """パスワード変更"""
-    if not current_user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Google認証アカウントはパスワードを変更できません",
-        )
-    if not verify_password(request.current_password, current_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="現在のパスワードが正しくありません",
-        )
-    current_user.password_hash = get_password_hash(request.new_password)
-    db.commit()
-    return {"message": "パスワードを変更しました"}
 
 
 @router.get("/me", response_model=UserResponse)

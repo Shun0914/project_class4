@@ -1,9 +1,8 @@
-"""パスワードハッシュ化とJWTトークン生成・検証"""
+"""JWTトークン生成・検証"""
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -12,21 +11,8 @@ from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.db import get_db
 from app.models.user import User
 
-# パスワードハッシュ化の設定
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # OAuth2スキーム（トークン取得先を指定）
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """パスワードの検証"""
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """パスワードのハッシュ化"""
-    return pwd_context.hash(password)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/google")
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

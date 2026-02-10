@@ -2,17 +2,7 @@
  * 認証関連のAPI関数
  */
 import { get, post, patch } from './client';
-import type { User, SignupRequest, LoginRequest, GoogleAuthRequest, SetupRequest, UpdateProfileRequest, ChangePasswordRequest, TokenResponse } from '../types/auth';
-
-/** サインアップ */
-export async function signup(data: SignupRequest): Promise<TokenResponse> {
-  return post<TokenResponse>('/api/auth/signup', data);
-}
-
-/** ログイン */
-export async function login(data: LoginRequest): Promise<TokenResponse> {
-  return post<TokenResponse>('/api/auth/login', data);
-}
+import type { User, GoogleAuthRequest, SetupRequest, UpdateProfileRequest, TokenResponse } from '../types/auth';
 
 /** Google認証 */
 export async function googleAuth(data: GoogleAuthRequest): Promise<TokenResponse> {
@@ -32,11 +22,6 @@ export async function setupProfile(data: SetupRequest): Promise<User> {
 /** プロフィール更新 */
 export async function updateProfile(data: UpdateProfileRequest): Promise<User> {
   return patch<User>('/api/auth/me', data);
-}
-
-/** パスワード変更 */
-export async function changePassword(data: ChangePasswordRequest): Promise<void> {
-  await post<void>('/api/auth/change-password', data);
 }
 
 /** 現在のユーザー情報を取得 */
