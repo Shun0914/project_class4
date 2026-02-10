@@ -17,27 +17,13 @@ from app.db import engine
 def validate_user(request: Request) -> str:
     """
     Authorization: Bearer <Google ID Token> を検証し、
-    user_id を返す
-
-    - 失敗時は HTTPException を投げる
+    user_id を返す。失敗時は anonymousを返す。
     """
     try:
-        google_sub = get_google_sub_from_bearer(request)
+        return get_google_sub_from_bearer(request)
     except HTTPException:
-        # auth.py 側の HTTPException をそのまま投げる
-        raise
-
-    # 最小構成：google_sub を user_id として使う
-    user_id = google_sub
-
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="user not allowed",
-        )
-
-    return user_id
-
+        # 認証エラー（トークン不足、期限切れ等）が発生した場合は匿名扱いにする
+        return "anonymous"
 
 # =========================
 # DB処理：支出登録
