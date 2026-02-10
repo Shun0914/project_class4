@@ -33,6 +33,38 @@ def safe_divide(numerator, denominator):
         return 0.0
     return float(numerator) / float(denominator)
 
+def _calculate_fixed_week_of_year(today: date) -> tuple[date, date]:
+    """
+    年間で固定された1週間を計算
+    
+    ルール:
+    - 1年を7日単位で区切る（1/1-1/7, 1/8-1/14, ...）
+    - 今日が属する週を返す
+    
+    例:
+    - 2026/02/09 → 2026/02/08-2026/02/14 (第6週)
+    - 2026/02/01 → 2026/01/26-2026/02/01 (第4週)
+    """
+    # 年初（1月1日）
+    year_start = date(today.year, 1, 1)
+    
+    # 年初からの経過日数
+    days_since_year_start = (today - year_start).days
+    
+    # 何週目か（0始まり）
+    week_number = days_since_year_start // 7
+    
+    # その週の開始日と終了日
+    week_start = year_start + timedelta(days=week_number * 7)
+    week_end = week_start + timedelta(days=6)
+    
+    # 年をまたぐ場合の調整（12月末）
+    year_end = date(today.year, 12, 31)
+    if week_end > year_end:
+        week_end = year_end
+    
+    return week_start, week_end
+
 
 
 @router.get("/analyze", response_model=AnalyzeResponse)
@@ -252,7 +284,7 @@ def ai_analyze(
     if not user_obj:
         raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
     # コーチモードを設定から取得
-    coach = user_obj.coach_mod
+    coach = user_obj.coach_mode
     
     # 今月の支出合計
     today = date.today()
