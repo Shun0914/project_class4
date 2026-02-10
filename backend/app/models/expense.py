@@ -35,8 +35,3 @@ class Expense(Base):
         return f"<Expense(id={self.id}, item='{self.item}', price={self.price})>"
 
 
-class ExpenseCreateRequest(BaseModel):
-    item: str
-    category_id: str
-    price: int
-    expense_date: date
