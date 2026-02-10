@@ -13,3 +13,6 @@ cryptography==41.0.7  # Required for pymysql
 # Migrations
 alembic==1.12.1
 
+# Authentication
+python-jose[cryptography]==3.3.0
+
