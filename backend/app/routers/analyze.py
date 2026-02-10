@@ -114,19 +114,52 @@ def analyze(
     if pace_rate is not None and pace_rate != float('inf'):
         pace_rate = round(pace_rate, 3)
     
-    # 一週間レポート
-    end_date = today
-    start_date = end_date - timedelta(days=7)
+    # 一週間レポート（今日より一つ前の固定週）
+    current_week_start, current_week_end = _calculate_fixed_week_of_year(today)
+    
+    # 一つ前の週を計算
+    previous_week_end = current_week_start - timedelta(days=1)
+    previous_week_start = previous_week_end - timedelta(days=6)
     
     weekly_expenses = db.query(Expense).filter(
         Expense.user_id == user_obj.id,
-        Expense.expense_date >= start_date,
-        Expense.expense_date <= end_date
+        Expense.expense_date >= previous_week_start,
+        Expense.expense_date <= previous_week_end
     ).all()
+    
+    start_date = previous_week_start
+    end_date = previous_week_end
     
     weekly_total = sum(e.price for e in weekly_expenses)
     weekly_count = len(weekly_expenses)
     weekly_average = round(weekly_total / weekly_count, 2) if weekly_count > 0 else 0.0
+    
+    # 一つ前の週の最終日時点のコーチメッセージを生成
+    weekly_month_start = previous_week_end.replace(day=1)
+    weekly_days_in_month = monthrange(previous_week_end.year, previous_week_end.month)[1]
+    weekly_month_end = previous_week_end.replace(day=weekly_days_in_month)
+    weekly_days_remaining = weekly_days_in_month - previous_week_end.day
+    
+    weekly_month_total = db.query(func.sum(Expense.price)).filter(
+        Expense.user_id == user_obj.id,
+        Expense.expense_date >= weekly_month_start,
+        Expense.expense_date <= previous_week_end
+    ).scalar() or 0
+    
+    weekly_remaining = (budget - weekly_month_total) if budget else None
+    weekly_pace_rate = _calculate_pace_rate(weekly_remaining, weekly_days_remaining, budget, weekly_days_in_month)
+    if weekly_pace_rate is not None and weekly_pace_rate != float('inf'):
+        weekly_pace_rate = round(weekly_pace_rate, 3)
+    
+    weekly_coach_message = _generate_coach_message(
+        coach=coach,
+        budget=budget,
+        remaining=weekly_remaining,
+        days_remaining=weekly_days_remaining,
+        pace_rate=weekly_pace_rate,
+        has_expenses=weekly_month_total > 0,
+        has_budget=has_budget
+    )
     
     # AIコーチングメッセージ生成（エンプティ状態を考慮）
     coach_message = _generate_coach_message(
@@ -155,7 +188,8 @@ def analyze(
             end_date=end_date,
             total=weekly_total,
             count=weekly_count,
-            average=weekly_average
+            average=weekly_average,
+            coach_message=weekly_coach_message
         )
     )
 

@@ -11,6 +11,7 @@ class WeeklyReport(BaseModel):
     total: int
     count: int
     average: float
+    coach_message: str
 
 
 class AnalyzeResponse(BaseModel):

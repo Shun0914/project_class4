@@ -1,15 +1,30 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db import engine
-from app.routers import analyze
+from app.routers import auth, analyze
 
 app = FastAPI(
-    title="C4 wallet API",
-    description="家計簿アプリ C4 walletのAPI",
+    title="まっちゃんウォレット(仮) API",
+    description="家計簿アプリ まっちゃんウォレット(仮) のAPI",
     version="0.1.0"
 )
 
+# CORS設定（フロントエンドからのリクエストを許可）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
+# ルーターの登録
+app.include_router(auth.router)
 app.include_router(analyze.router)
+
 
 @app.get("/")
 def read_root():
@@ -33,4 +48,3 @@ def health_check_db():
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
         return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
-
