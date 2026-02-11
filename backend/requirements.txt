@@ -16,3 +16,7 @@ alembic==1.12.1
 # user_idをtokenから取得するために必要
 google-auth
 requests
+
+# Authentication
+python-jose[cryptography]==3.3.0
+
