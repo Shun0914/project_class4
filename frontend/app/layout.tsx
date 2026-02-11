@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { GoogleOAuthWrapper } from "@/lib/components/GoogleOAuthWrapper";
 
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,15 +26,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+    return (
     <html lang="ja">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <GoogleOAuthWrapper>
-          <AuthProvider>{children}</AuthProvider>
-        </GoogleOAuthWrapper>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        
+          <GoogleOAuthWrapper>
+            <AuthProvider>{children}</AuthProvider>
+          </GoogleOAuthWrapper>
+        
       </body>
     </html>
   );
+
 }
