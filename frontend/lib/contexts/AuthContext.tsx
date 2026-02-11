@@ -9,20 +9,6 @@ import {
   useContext,
   useState,
   useEffect,
-  type ReactNode,
-} from 'react';
-
-interface User {
-  id: number;
-  email: string;
-  nickname: string;
-  coach_mode: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-}
   useCallback,
   type ReactNode,
 } from 'react';
@@ -36,20 +22,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // テスト用: 仮のユーザーを設定
-    setUser({ 
-      id: 1, 
-      email: 'test@example.com', 
-      nickname: 'testuser',
-      coach_mode: 'tenshi'
-    });
-    setIsLoading(false);
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, isLoading }}>
   const router = useRouter();
 
   // ページ読み込み時にトークンが有効かチェック
