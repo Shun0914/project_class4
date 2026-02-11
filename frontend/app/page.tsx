@@ -27,7 +27,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user?.nickname) {
-      get<AnalyzeResponse>(`/api/analyze?user=${user.nickname}`)
+      get<AnalyzeResponse>(`/api/analyze`)
         .then(setData)
         .catch(console.error);
     }
@@ -53,11 +53,15 @@ export default function HomePage() {
     if (user?.nickname) {
       setIsAnalyzing(true);
       try {
-        const response = await get<AIAnalyzeResponse>(`/api/ai-analyze?user=${user.nickname}`);
+        const response = await get<AIAnalyzeResponse>(`/api/ai-analyze`);
         setAiAnalysis(response.ai_message);
       } catch (error) {
         console.error('AI分析エラー:', error);
-        setAiAnalysis('AI分析の取得に失敗しました。');
+        if (error instanceof Error && error.message.includes('予算が設定されていません')) {
+          setAiAnalysis('予算が設定されていません。先に予算を設定してください。');
+        } else {
+          setAiAnalysis('AI分析の取得に失敗しました。');
+        }
       } finally {
         setIsAnalyzing(false);
       }
@@ -116,8 +120,8 @@ export default function HomePage() {
               {/* Angel/Demon Image */}
               <div className="shrink-0 w-[80px] h-[80px]">
                 <Image
-                  src={data.coach_type === 'tenshi' ? '/angel.svg' : '/demon.svg'}
-                  alt={data.coach_type === 'tenshi' ? '天使' : '鬼'}
+                  src={data.coach_mode === 'angel' ? '/angel.svg' : '/demon.svg'}
+                  alt={data.coach_mode === 'angel' ? '天使' : '鬼'}
                   width={80}
                   height={80}
                 />
@@ -128,7 +132,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[#2a3449] text-[16px]">予算</span>
                   <span className="font-bold text-[#2a3449] text-[20px]">
-                    {data.budget?.toLocaleString() || '0'}円
+                    {data.budget ? `${data.budget.toLocaleString()}円` : '未設定'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -140,7 +144,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[#478dff] text-[16px]">残金</span>
                   <span className="font-bold text-[#478dff] text-[20px]">
-                    {data.remaining?.toLocaleString() || '0'}円
+                    {data.remaining !== null ? `${data.remaining.toLocaleString()}円` : '未設定'}
                   </span>
                 </div>
               </div>
@@ -228,8 +232,8 @@ export default function HomePage() {
                     className="w-full bg-gradient-to-r from-[#f5a047] to-[#f7b563] text-white py-[14px] rounded-[8px] font-bold text-[16px] hover:from-[#e08f36] hover:to-[#e6a552] transition-colors flex items-center justify-center gap-[8px]"
                   >
                     <Image
-                      src={data.coach_type === 'tenshi' ? '/angel.svg' : '/demon.svg'}
-                      alt={data.coach_type === 'tenshi' ? '天使' : '鬼'}
+                      src={data.coach_mode === 'angel' ? '/angel.svg' : '/demon.svg'}
+                      alt={data.coach_mode === 'angel' ? '天使' : '鬼'}
                       width={24}
                       height={24}
                     />

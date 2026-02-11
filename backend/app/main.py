@@ -2,12 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db import engine
-<<<<<<< HEAD
 from app.routers import auth, analyze
-=======
-from app.routers import analyze
-from app.routers import auth
->>>>>>> origin
 
 app = FastAPI(
     title="まっちゃんウォレット(仮) API",

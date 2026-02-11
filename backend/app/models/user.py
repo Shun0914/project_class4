@@ -15,7 +15,7 @@ class User(Base):
     google_id = Column(String(255), unique=True, nullable=True)
     nickname = Column(String(255), nullable=True)
     report_enabled = Column(Boolean, nullable=False, server_default="1")
-    coach_mode = Column(String(50), nullable=False, server_default="tenshi")
+    coach_mode = Column(String(50), nullable=False, server_default="angel")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 

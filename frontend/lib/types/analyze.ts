@@ -5,7 +5,7 @@ export interface AnalyzeResponse {
   remaining: number | null;
   remaining_rate: number | null;
   pace_rate: number | null;
-  coach_type: string;
+  coach_mode: string;
   coach_message: string;
   has_expenses: boolean;
   has_budget: boolean;
@@ -25,6 +25,6 @@ export interface AIAnalyzeResponse {
   user: string;
   total: number;
   budget: number;
-  coach_type: string;
+  coach_mode: string;
   ai_message: string;
 }
