@@ -5,6 +5,25 @@
 // 環境変数からAPIのベースURLを取得（デフォルトはローカル開発環境）
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+/** localStorageのトークンキー */
+const TOKEN_KEY = 'access_token';
+
+/** トークンの取得 */
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+/** トークンの保存 */
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+/** トークンの削除 */
+export function removeToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 /**
  * APIエラークラス
  */
@@ -29,9 +48,15 @@ async function fetchApi<T>(
   const safeEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${safeEndpoint}`;
   
-  const defaultHeaders: HeadersInit = {
+  const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+
+  // 認証トークンがあれば追加
+  const token = getToken();
+  if (token) {
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
 
   const response = await fetch(url, {
     ...options,
