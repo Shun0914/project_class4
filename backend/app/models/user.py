@@ -24,7 +24,8 @@ class User(Base):
     budget = relationship("Budget", back_populates="user", uselist=False)
     expense_evaluations = relationship("ExpenseEvaluation", back_populates="user")
     detection_histories = relationship("DetectionHistory", back_populates="user")
-    weekly_reports = relationship("WeeklyReport", back_populates="user")
+    # ★ WeeklyReport のファイルがないので、一旦コメントアウト
+    #weekly_reports = relationship("WeeklyReport", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', coach_mode='{self.coach_mode}')>"
