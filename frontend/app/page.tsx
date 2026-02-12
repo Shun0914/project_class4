@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState  } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import BottomNav from '@/lib/components/BottomNav';
+import { ExpenseInputModal } from "./_components/ExpenseInputModal";
+
 
 export default function Home() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [isInputOpen, setIsInputOpen] = useState(false);
+
 
   // 未認証ならログインページへ、初期設定未完了なら設定ページへリダイレクト
   useEffect(() => {
@@ -38,6 +42,15 @@ export default function Home() {
           ようこそ、{user.nickname ?? user.username} さん
         </p>
       </div>
+            <button
+        type="button"
+        aria-label="支出を入力"
+        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white text-3xl shadow-lg"
+        onClick={() => setIsInputOpen(true)}
+      >
+        +
+      </button>
+
       <BottomNav />
     </div>
   );

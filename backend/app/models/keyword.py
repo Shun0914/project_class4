@@ -17,6 +17,11 @@ class Keyword(Base):
 
     # リレーションシップ
     expenses = relationship("Expense", secondary="expense_keywords", back_populates="keywords")
+    expense_keyword_relations = relationship(
+    "ExpenseKeyword", 
+    back_populates="keyword",
+    overlaps="expenses,keywords"
+)
 
     def __repr__(self):
         return f"<Keyword(id={self.id}, name='{self.name}', normalized_name='{self.normalized_name}')>"
