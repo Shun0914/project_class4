@@ -13,7 +13,9 @@ async function forward(req: NextRequest, path: string) {
     method: "POST",
     headers: {
       "Content-Type": req.headers.get("content-type") ?? "application/json",
-      Cookie: req.headers.get("cookie") ?? "",
+      // ★ 修正点: クライアントから送られた Authorization ヘッダーをバックエンドに引き継ぐ
+      "Authorization": req.headers.get("authorization") ?? "",
+      "Cookie": req.headers.get("cookie") ?? "",
     },
     body: bodyText,
     redirect: "manual",

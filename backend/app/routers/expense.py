@@ -116,51 +116,22 @@ def register_expense(
     payload: ExpenseCreateRequest, 
     request: Request,
     db: Session = Depends(get_db),
-    # ★バックエンドのテスト用に仮実装★
-    username: str = Query("hiyoko.1.5.42@gmail.com", description="ユーザー名"),
-    #current_user: User = Depends(get_current_user) 
+    # ★修正箇所1: テスト用の username を削除し、current_user を有効化
+    current_user: User = Depends(get_current_user) 
 ):
 
+    # レスポンス定義 (中略)
 
-    # レスポンス定義
-    def err(http_status: int, code: str, message: str, details: list[dict] | None = None):
-        body = {
-            "success": False,
-            "error": {
-                "code": code,
-                "message": message,
-                "request_id": request.headers.get("X-Request-ID", "unknown"),
-            },
-        }
-        if details is not None:
-            body["error"]["details"] = details
-        return JSONResponse(status_code=http_status, content=body)
-
-
+    try:
         # -------------------------
-        # 1) validate_user で user_id を取得（Google ID Token 検証）
+        # 1) 認証済みユーザーから ID を取得
         # -------------------------
-        # すでに current_user が取得できているので、IDを取り出すだけ
-
-        # 失敗時は HTTPException(401/403) を投げる想定
-        # TODO: 現在、失敗時も user_id="anonymous" を返す仕様になっている
-        # 本番デプロイでは、認証必須に変更することが望ましい。
-
+        # ★修正箇所2: DBへのユーザー名問い合わせを全て削除し、トークンから得た current_user を使う
+        user_id = current_user.id
 
         # -------------------------
         # 2) insert_expense_record で Azure SQL にデータ挿入
         # -------------------------
-    try:
-        # ★仮実装：ユーザー名をキーにDBからユーザーを取得★
-        user_obj = db.query(User).filter(User.username == username).first()
-        if not user_obj:
-            return err(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "ユーザーが見つかりません")
-
-        user_id = user_obj.id
-
-        # ★トークン連携時は、上記のユーザー名検索をやめて、current_user.id を直接 user_id にセットする
-        #user_id = current_user.id
-
         # DB保存処理の実行
         saved = insert_expense_record(
             user_id=user_id,
@@ -169,11 +140,8 @@ def register_expense(
             price=payload.price,
             expense_date=payload.expense_date,
         )
-        # saved は DB保存後のレコード情報（expense_id / created_at / updated_at など）を返す想定
 
-        # -------------------------
         # 3) 実行結果を return
-        # -------------------------
         return {
             "success": True,
             "data": saved,

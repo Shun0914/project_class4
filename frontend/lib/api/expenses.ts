@@ -15,26 +15,24 @@ export type CreateExpenseResponse = {
   created_at: string;
 };
 
-export async function createExpense(
-  payload: CreateExpenseRequest
-): Promise<CreateExpenseResponse> {
-  const res = await fetch("/api/expenses", {
+export async function createExpense(data: any) {
+  // 1. 保存してあるトークンを取得
+  const token = localStorage.getItem('access_token');
+
+  // 2. Next.js の Route Handler (/api/expenses) にリクエスト
+  const response = await fetch("/api/expenses", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+      // 3. Authorization ヘッダーを付与
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
   });
 
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const data = await res.json();
-      detail = data?.detail ? String(data.detail) : JSON.stringify(data);
-    } catch {
-      // ignore
-    }
-    throw new Error(detail || `Failed to create expense: ${res.status}`);
+  if (!response.ok) {
+    throw new Error("保存に失敗しました");
   }
 
-  return res.json();
+  return response.json();
 }

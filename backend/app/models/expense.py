@@ -33,6 +33,6 @@ class Expense(Base):
     receipt_images = relationship("ReceiptImage", back_populates="expense")
     expense_evaluations = relationship("ExpenseEvaluation", back_populates="expense")
     keywords = relationship("Keyword", secondary="expense_keywords", back_populates="expenses")
-
+    expense_keyword_relations = relationship("ExpenseKeyword", back_populates="expense",overlaps="expenses,keywords")
     def __repr__(self):
         return f"<Expense(id={self.id}, item='{self.item}', price={self.price})>"
