@@ -111,13 +111,13 @@ def insert_expense_record(
 ## レビュー時にYoko追加 ここまで ##
 
 
-@router.post("/expense", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def register_expense(
     payload: ExpenseCreateRequest, 
     request: Request,
     db: Session = Depends(get_db),
     # ★バックエンドのテスト用に仮実装★
-    username: str = Query(..., description="ユーザー名"),
+    username: str = Query("hiyoko.1.5.42@gmail.com", description="ユーザー名"),
     #current_user: User = Depends(get_current_user) 
 ):
 
