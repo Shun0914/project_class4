@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class ExpenseCreateRequest(BaseModel):
     item: str
-    category_id: str
+    category_id: int
     price: int
     expense_date: date
 
