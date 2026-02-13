@@ -5,7 +5,7 @@
 ## デプロイ構成
 
 ```
-[GitHub] --push--> [GitHub Actions] --> [tech0-gen-11-step3-2-py-51]  (バックエンド)
+[GitHub] --push--> [GitHub Actions] --> [tech0-gen-11-step3-2-py-67]  (バックエンド)
                 \                    --> [tech0-gen-11-step3-2-node-67] (フロントエンド)
                  \
                   (環境変数・Secrets)
@@ -20,7 +20,7 @@
 
 | リソース | リソース名 | 用途 |
 |---------|-----------|------|
-| Azure App Service（Python） | **tech0-gen-11-step3-2-py-51** | バックエンド（FastAPI） |
+| Azure App Service（Python） | **tech0-gen-11-step3-2-py-67** | バックエンド（FastAPI） |
 | Azure App Service（Node.js） | **tech0-gen-11-step3-2-node-67** | フロントエンド（Next.js） |
 | Azure Key Vault | **gen11-key-container** | シークレット管理（APIキー、OAuth等） |
 | Azure Database for MySQL（フレキシブルサーバー） | （作成が必要） | データベース |
@@ -38,7 +38,7 @@
    - データベース `project_class4_db` の作成  
 
 2. **Azure App Service**（既存）  
-   - バックエンド: **tech0-gen-11-step3-2-py-51**  
+   - バックエンド: **tech0-gen-11-step3-2-py-67**  
    - フロントエンド: **tech0-gen-11-step3-2-node-67**  
 
 3. **Azure Key Vault**（既存: **gen11-key-container**）  

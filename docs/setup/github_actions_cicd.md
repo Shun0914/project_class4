@@ -23,7 +23,7 @@
 
 ### 手順
 
-1. Azure Portal で **tech0-gen-11-step3-2-py-51**（バックエンド用）を開く
+1. Azure Portal で **tech0-gen-11-step3-2-py-67**（バックエンド用）を開く
 2. **「概要」** または **「設定」→「プロパティ」** を選択
 3. **「発行プロファイルのダウンロード」** をクリック
 4. ダウンロードした `.PublishSettings` ファイルを開き、内容をコピー
@@ -38,9 +38,9 @@
 
 | Secret 名 | 値 | 説明 |
 |----------|-----|------|
-| `AZUREAPPSERVICE_PUBLISHPROFILE_BACKEND` | tech0-gen-11-step3-2-py-51 の Publish Profile の内容（全体） | バックエンドデプロイ用 |
+| `AZUREAPPSERVICE_PUBLISHPROFILE_BACKEND` | tech0-gen-11-step3-2-py-67 の Publish Profile の内容（全体） | バックエンドデプロイ用 |
 | `AZUREAPPSERVICE_PUBLISHPROFILE_FRONTEND` | tech0-gen-11-step3-2-node-67 の Publish Profile の内容（全体） | フロントエンドデプロイ用 |
-| `NEXT_PUBLIC_API_URL` | `https://tech0-gen-11-step3-2-py-51.azurewebsites.net` | フロントエンドビルド時に埋め込む |
+| `NEXT_PUBLIC_API_URL` | `https://tech0-gen-11-step3-2-py-67.azurewebsites.net` | フロントエンドビルド時に埋め込む |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth Client ID | フロントエンドビルド時に埋め込む |
 
 **注意**: `NEXT_PUBLIC_*` はビルド時にフロントエンドのコードに埋め込まれるため、GitHub Secrets で管理します。
@@ -124,7 +124,7 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'tech0-gen-11-step3-2-py-51'
+          app-name: 'tech0-gen-11-step3-2-py-67'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BACKEND }}
 ```
@@ -220,7 +220,7 @@ jobs:
 
 ### 方法1: Azure Cloud Shell から
 
-1. Azure Portal で **tech0-gen-11-step3-2-py-51**（バックエンド用）を開く
+1. Azure Portal で **tech0-gen-11-step3-2-py-67**（バックエンド用）を開く
 2. **「開発ツール」→「SSH」** または **「高度なツール」→「Go」** で Kudu にアクセス
 3. SSH または コンソールで以下を実行：
 

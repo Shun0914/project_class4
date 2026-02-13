@@ -6,7 +6,7 @@
 
 | 種類 | リソース名 |
 |------|-----------|
-| バックエンド App Service | **tech0-gen-11-step3-2-py-51** |
+| バックエンド App Service | **tech0-gen-11-step3-2-py-67** |
 | フロントエンド App Service | **tech0-gen-11-step3-2-node-67** |
 
 ## 前提条件
@@ -22,7 +22,7 @@
 ### 手順
 
 1. [Azure Portal](https://portal.azure.com/) にログイン
-2. **tech0-gen-11-step3-2-py-51**（バックエンド用）を開く
+2. **tech0-gen-11-step3-2-py-67**（バックエンド用）を開く
 3. 左側メニューで **「設定」→「構成」** を選択
 4. **「一般設定」** タブを選択
 5. **「起動コマンド」** フィールドに以下を入力：
@@ -96,7 +96,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 ### 2. バックエンドのヘルスチェック
 
 ```
-https://tech0-gen-11-step3-2-py-51.azurewebsites.net/
+https://tech0-gen-11-step3-2-py-67.azurewebsites.net/
 ```
 
 **期待されるレスポンス**:
@@ -110,7 +110,7 @@ https://tech0-gen-11-step3-2-py-51.azurewebsites.net/
 ### 3. データベース接続確認
 
 ```
-https://tech0-gen-11-step3-2-py-51.azurewebsites.net/health/db
+https://tech0-gen-11-step3-2-py-67.azurewebsites.net/health/db
 ```
 
 **期待されるレスポンス**:
