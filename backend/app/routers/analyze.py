@@ -1,5 +1,5 @@
 """分析API"""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date, timedelta
@@ -8,10 +8,10 @@ from app.db import get_db
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.budget import Budget
-from app.schemas.analyze import AnalyzeResponse, WeeklyReport
+from app.schemas.analyze import AnalyzeResponse, WeeklyReport, AIAnalyzeResponse
+from app.core.security import get_current_user
 from openai import AzureOpenAI
 import os
-from app.schemas.analyze import AnalyzeResponse, WeeklyReport, AIAnalyzeResponse
 
 
 # OpenAI クライアント初期化
@@ -32,6 +32,24 @@ def safe_divide(numerator, denominator):
     if denominator == 0:
         return 0.0
     return float(numerator) / float(denominator)
+
+def _get_monthly_expense_data(user_id: int, db: Session) -> tuple[int, int | None]:
+    """月次支出データと予算を取得"""
+    today = date.today()
+    month_start = today.replace(day=1)
+    days_in_month = monthrange(today.year, today.month)[1]
+    month_end = today.replace(day=days_in_month)
+    
+    total = db.query(func.sum(Expense.price)).filter(
+        Expense.user_id == user_id,
+        Expense.expense_date >= month_start,
+        Expense.expense_date <= month_end
+    ).scalar() or 0
+    
+    budget_obj = db.query(Budget).filter(Budget.user_id == user_id).first()
+    budget = budget_obj.monthly_budget if budget_obj else None
+    
+    return total, budget
 
 def _calculate_fixed_week_of_year(today: date) -> tuple[date, date]:
     """
@@ -69,37 +87,17 @@ def _calculate_fixed_week_of_year(today: date) -> tuple[date, date]:
 
 @router.get("/analyze", response_model=AnalyzeResponse)
 def analyze(
-    user: str = Query(..., description="ユーザー名"),  # 仮実装：認証後は削除
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """分析API（コーチング）- 認証から取得予定"""
+    """分析API（コーチング）"""
     
-    # ユーザー取得
-    user_obj = db.query(User).filter(User.username == user).first()
-    if not user_obj:
-        raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
+    coach = current_user.coach_mode
+    total, budget = _get_monthly_expense_data(current_user.id, db)
     
-    # コーチモードを設定から取得
-    coach = user_obj.coach_mode  # URLパラメータではなく設定から取得
-    
-    # 今月の期間を計算
     today = date.today()
     days_in_month = monthrange(today.year, today.month)[1]
     days_remaining = days_in_month - today.day
-    
-    # 今月の支出合計
-    month_start = today.replace(day=1)
-    month_end = today.replace(day=days_in_month)
-    
-    total = db.query(func.sum(Expense.price)).filter(
-        Expense.user_id == user_obj.id,
-        Expense.expense_date >= month_start,
-        Expense.expense_date <= month_end
-    ).scalar() or 0
-    
-    # 予算取得
-    budget_obj = db.query(Budget).filter(Budget.user_id == user_obj.id).first()
-    budget = budget_obj.monthly_budget if budget_obj else None
     
     # エンプティ状態チェック
     has_expenses = total > 0
@@ -114,19 +112,52 @@ def analyze(
     if pace_rate is not None and pace_rate != float('inf'):
         pace_rate = round(pace_rate, 3)
     
-    # 一週間レポート
-    end_date = today
-    start_date = end_date - timedelta(days=7)
+    # 一週間レポート（今日より一つ前の固定週）
+    current_week_start, current_week_end = _calculate_fixed_week_of_year(today)
+    
+    # 一つ前の週を計算
+    previous_week_end = current_week_start - timedelta(days=1)
+    previous_week_start = previous_week_end - timedelta(days=6)
     
     weekly_expenses = db.query(Expense).filter(
-        Expense.user_id == user_obj.id,
-        Expense.expense_date >= start_date,
-        Expense.expense_date <= end_date
+        Expense.user_id == current_user.id,
+        Expense.expense_date >= previous_week_start,
+        Expense.expense_date <= previous_week_end
     ).all()
+    
+    start_date = previous_week_start
+    end_date = previous_week_end
     
     weekly_total = sum(e.price for e in weekly_expenses)
     weekly_count = len(weekly_expenses)
     weekly_average = round(weekly_total / weekly_count, 2) if weekly_count > 0 else 0.0
+    
+    # 一つ前の週の最終日時点のコーチメッセージを取得
+    weekly_month_start = previous_week_end.replace(day=1)
+    weekly_days_in_month = monthrange(previous_week_end.year, previous_week_end.month)[1]
+    weekly_month_end = previous_week_end.replace(day=weekly_days_in_month)
+    weekly_days_remaining = weekly_days_in_month - previous_week_end.day
+    
+    weekly_month_total = db.query(func.sum(Expense.price)).filter(
+        Expense.user_id == current_user.id,
+        Expense.expense_date >= weekly_month_start,
+        Expense.expense_date <= previous_week_end
+    ).scalar() or 0
+    
+    weekly_remaining = (budget - weekly_month_total) if budget else None
+    weekly_pace_rate = _calculate_pace_rate(weekly_remaining, weekly_days_remaining, budget, weekly_days_in_month)
+    if weekly_pace_rate is not None and weekly_pace_rate != float('inf'):
+        weekly_pace_rate = round(weekly_pace_rate, 3)
+    
+    weekly_coach_message = _generate_coach_message(
+        coach=coach,
+        budget=budget,
+        remaining=weekly_remaining,
+        days_remaining=weekly_days_remaining,
+        pace_rate=weekly_pace_rate,
+        has_expenses=weekly_month_total > 0,
+        has_budget=has_budget
+    )
     
     # AIコーチングメッセージ生成（エンプティ状態を考慮）
     coach_message = _generate_coach_message(
@@ -140,13 +171,13 @@ def analyze(
     )
     
     return AnalyzeResponse(
-        user=user,
+        user=current_user.username,
         total=total,
         budget=budget,
         remaining=remaining,
         remaining_rate=remaining_rate,
         pace_rate=pace_rate,
-        coach_type=coach,
+        coach_mode=coach,
         coach_message=coach_message,
         has_expenses=has_expenses,  # エンプティ状態フラグ
         has_budget=has_budget,      # エンプティ状態フラグ
@@ -155,7 +186,8 @@ def analyze(
             end_date=end_date,
             total=weekly_total,
             count=weekly_count,
-            average=weekly_average
+            average=weekly_average,
+            coach_message=weekly_coach_message
         )
     )
 
@@ -206,8 +238,8 @@ def _generate_coach_message(
     """
     コーチングメッセージ生成（エンプティ状態を考慮）
     """
-    emoji = "👹" if coach == "oni" else "👼"
-    is_oni = coach == "oni"
+    emoji = "😈" if coach == "devil" else "👼"
+    is_oni = coach == "devil"
     
     # エンプティ状態: 予算も支出もない
     if not has_budget and not has_expenses:
@@ -275,43 +307,24 @@ def _generate_coach_message(
 
 @router.get("/ai-analyze", response_model=AIAnalyzeResponse)
 def ai_analyze(
-    user: str = Query(..., description="ユーザー名"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """AI分析API（OpenAI統合）"""
     
-    user_obj = db.query(User).filter(User.username == user).first()
-    if not user_obj:
-        raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
-    # コーチモードを設定から取得
-    coach = user_obj.coach_mode
+    coach = current_user.coach_mode
+    total, budget = _get_monthly_expense_data(current_user.id, db)
     
-    # 今月の支出合計
-    today = date.today()
-    month_start = today.replace(day=1)
-    days_in_month = monthrange(today.year, today.month)[1]
-    month_end = today.replace(day=days_in_month)
-    
-    total = db.query(func.sum(Expense.price)).filter(
-        Expense.user_id == user_obj.id,
-        Expense.expense_date >= month_start,
-        Expense.expense_date <= month_end
-    ).scalar() or 0
-    
-    budget_obj = db.query(Budget).filter(Budget.user_id == user_obj.id).first()
-    if not budget_obj:
+    if budget is None:
         raise HTTPException(status_code=400, detail="予算が設定されていません")
     
-    budget = budget_obj.monthly_budget
-    
-    # OpenAI API呼び出し
     ai_message = _generate_ai_analysis(coach, total, budget)
     
     return AIAnalyzeResponse(
-        user=user,
+        user=current_user.username,
         total=total,
         budget=budget,
-        coach_type=coach,
+        coach_mode=coach,
         ai_message=ai_message
     )
 
@@ -331,7 +344,7 @@ def _generate_ai_analysis(coach: str, total: int, budget: int) -> str:
 * トーン
 """
     
-    if coach == "oni":
+    if coach == "devil":
         instructions += "- 全体的に厳しい口調でユーザーに接する\n- 忖度なしで意見を述べる"
     else:
         instructions += "- 優しく励ます口調でユーザーに接する\n- ポジティブなアドバイスを心がける"

@@ -44,7 +44,9 @@ def insert_test_data():
                 user_id=user.id,
                 item=item,
                 price=price,
-                expense_date=exp_date
+                expense_date=exp_date,
+                helpful_count=0,
+                helpfulness_score=0.0
             )
             db.add(expense)
         

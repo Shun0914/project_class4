@@ -11,6 +11,7 @@ class WeeklyReport(BaseModel):
     total: int
     count: int
     average: float
+    coach_message: str
 
 
 class AnalyzeResponse(BaseModel):
@@ -20,7 +21,7 @@ class AnalyzeResponse(BaseModel):
     remaining: int | None
     remaining_rate: float | None
     pace_rate: float | None
-    coach_type: str
+    coach_mode: str
     coach_message: str
     has_expenses: bool
     has_budget: bool
@@ -32,6 +33,6 @@ class AIAnalyzeResponse(BaseModel):
     user: str
     total: int
     budget: int
-    coach_type: str
+    coach_mode: str
     ai_message: str
 

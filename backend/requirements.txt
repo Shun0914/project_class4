@@ -22,4 +22,3 @@ httpx>=0.27.0,<0.28.0
 
 # Authentication
 python-jose[cryptography]==3.3.0
-

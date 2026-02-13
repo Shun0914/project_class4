@@ -19,8 +19,8 @@ from app.models.keyword import Keyword
 
 
 app = FastAPI(
-    title="C4 wallet API",
-    description="家計簿アプリ C4 walletのAPI",
+    title="まっちゃんウォレット(仮) API",
+    description="家計簿アプリ まっちゃんウォレット(仮) のAPI",
     version="0.1.0"
 )
 

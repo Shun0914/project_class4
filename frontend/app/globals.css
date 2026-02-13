@@ -24,3 +24,36 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.prose {
+  color: #0a0604;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: #2a3449;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.prose ul,
+.prose ol {
+  margin-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li {
+  margin-bottom: 0.25em;
+}
+
+.prose p {
+  margin-bottom: 0.75em;
+}
+
+.prose strong {
+  font-weight: bold;
+  color: #2a3449;
+}
