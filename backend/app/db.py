@@ -14,9 +14,15 @@ DATABASE_URL = os.getenv(
     "mysql+pymysql://root:password@localhost:3306/project_class4_db"
 )
 
+# Azure MySQL は SSL 接続が必須
+_connect_args = {}
+if DATABASE_URL and "database.azure.com" in DATABASE_URL:
+    _connect_args["ssl"] = {"ssl": True}
+
 # SQLAlchemyエンジンを作成
 engine = create_engine(
     DATABASE_URL,
+    connect_args=_connect_args,
     pool_pre_ping=True,  # 接続の有効性をチェック
     echo=False  # SQLクエリをログ出力するか（開発時はTrue推奨）
 )

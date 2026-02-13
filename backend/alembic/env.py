@@ -2,7 +2,7 @@ from logging.config import fileConfig
 import os
 import sys
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, create_engine
 from sqlalchemy import pool
 
 from alembic import context
@@ -78,11 +78,20 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    url = config.get_main_option("sqlalchemy.url")
+    # Azure MySQL は SSL 接続が必須
+    if url and "database.azure.com" in url:
+        connectable = create_engine(
+            url,
+            connect_args={"ssl": {"ssl": True}},
+            poolclass=pool.NullPool,
+        )
+    else:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
     with connectable.connect() as connection:
         context.configure(
