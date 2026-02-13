@@ -2,6 +2,64 @@
 
 このドキュメントでは、project_class4 用に Azure Database for MySQL のリソース作成からデータベースセットアップまでの手順を説明します。
 
+---
+
+## 今すぐやること（簡易チェックリスト）
+
+MySQL サーバー **rg-001-gen11-step3-class4** が既にある場合、以下の順番で進めてください。
+
+### Step 1: 接続情報を確認する
+
+1. [Azure Portal](https://portal.azure.com/) にログイン
+2. 検索バーで **「rg-001-gen11-step3-class4」** と入力 → MySQL サーバーをクリック
+3. 左メニュー **「設定」→「接続文字列」** を開く
+4. **ホスト名** と **ユーザー名** をメモ（パスワードは作成時に設定したもの）
+
+### Step 2: ファイアウォールに IP を追加する
+
+1. 同じ MySQL サーバー画面で、左メニュー **「設定」→「ネットワーク」** を開く
+2. **「+ ファイアウォール規則の追加」** をクリック
+3. **tech0-gen-11-step3-2-py-67**（バックエンド）を開く → **「設定」→「プロパティ」** で **「送信 IP アドレス」** をコピー
+4. MySQL のファイアウォールで、その IP を **開始 IP** と **終了 IP** の両方に入力
+5. **「確認および作成」** → **「作成」** をクリック
+
+### Step 3: データベースを作成する
+
+1. Azure Portal 上部の **Cloud Shell** アイコン（`>_`）をクリック → **Bash** を選択
+2. 以下を実行（`<管理者名>` と `<パスワード>` を実際の値に置き換え）：
+
+```bash
+mysql -h rg-001-gen11-step3-class4.mysql.database.azure.com -u <管理者名> -p
+```
+
+3. パスワード入力後、MySQL のプロンプト `mysql>` が出たら、以下を実行：
+
+```sql
+CREATE DATABASE project_class4_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SHOW DATABASES;
+```
+
+4. `project_class4_db` が表示されれば OK。`exit` で終了。
+
+### Step 4: 接続文字列を Key Vault に登録する
+
+1. **gen11-key-container**（Key Vault）を開く
+2. **「オブジェクト」→「シークレット」** → **「+ 生成/インポート」**
+3. 名前: `DATABASE-URL`
+4. 値: `mysql+pymysql://<管理者名>:<パスワード>@rg-001-gen11-step3-class4.mysql.database.azure.com:3306/project_class4_db`
+5. **「作成」** をクリック
+
+**以上で MySQL の準備は完了です。** 次は [azure_app_service_env_setup.md](./azure_app_service_env_setup.md) で環境変数を設定してください。
+
+---
+
+## リソース情報（project_class4 用）
+
+| 項目 | 値 |
+|------|-----|
+| MySQL フレキシブルサーバー名 | **rg-001-gen11-step3-class4** |
+| 接続ホスト | `rg-001-gen11-step3-class4.mysql.database.azure.com` |
+
 ## 前提条件
 
 - Azure サブスクリプションがあること
@@ -22,8 +80,8 @@
 
 #### 基本タブ
 - **サブスクリプション**: 使用するサブスクリプションを選択
-- **リソースグループ**: App Serviceと同じリソースグループを使用することを推奨
-- **サーバー名**: 一意の名前（例: `project-class4-mysql-server`）
+- **リソースグループ**: App Service と同じリソースグループ
+- **サーバー名**: **rg-001-gen11-step3-class4**（既存の場合）
 - **リージョン**: App Serviceと同じリージョンを選択（通信レイテンシーを最小化）
 - **MySQL バージョン**: 8.0 を推奨
 - **ワークロード タイプ**: 「開発/テスト」または「本番環境」を選択
@@ -87,7 +145,7 @@
 3. 以下のコマンドで接続：
 
 ```bash
-mysql -h <サーバー名>.mysql.database.azure.com -u <管理者名> -p
+mysql -h rg-001-gen11-step3-class4.mysql.database.azure.com -u <管理者名> -p
 ```
 
 パスワードを入力後、MySQLコマンドラインが起動します。
@@ -95,7 +153,7 @@ mysql -h <サーバー名>.mysql.database.azure.com -u <管理者名> -p
 #### オプション2: ローカルMySQLクライアントから接続
 - **MySQL Workbench**、**DBeaver**、**TablePlus** などを使用
 - 接続情報:
-  - **ホスト**: `<サーバー名>.mysql.database.azure.com`
+  - **ホスト**: `rg-001-gen11-step3-class4.mysql.database.azure.com`
   - **ポート**: `3306`
   - **ユーザー名**: サーバー管理者名
   - **パスワード**: 設定したパスワード
@@ -123,7 +181,7 @@ mysql+pymysql://{username}:{password}@{server_name}.mysql.database.azure.com:330
 
 **例**:
 ```
-mysql+pymysql://projectclass4admin:YourPassword@project-class4-mysql-server.mysql.database.azure.com:3306/project_class4_db
+mysql+pymysql://<管理者名>:<パスワード>@rg-001-gen11-step3-class4.mysql.database.azure.com:3306/project_class4_db
 ```
 
 **重要**: 

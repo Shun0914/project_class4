@@ -23,7 +23,7 @@
 | Azure App Service（Python） | **tech0-gen-11-step3-2-py-67** | バックエンド（FastAPI） |
 | Azure App Service（Node.js） | **tech0-gen-11-step3-2-node-67** | フロントエンド（Next.js） |
 | Azure Key Vault | **gen11-key-container** | シークレット管理（APIキー、OAuth等） |
-| Azure Database for MySQL（フレキシブルサーバー） | （作成が必要） | データベース |
+| Azure Database for MySQL | **rg-001-gen11-step3-class4**（フレキシブルサーバー名） | データベース |
 | Azure OpenAI | （作成が必要） | AI分析機能（オプション） |
 
 ## 手順書の実行順序

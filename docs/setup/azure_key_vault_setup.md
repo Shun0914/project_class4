@@ -34,7 +34,7 @@
 
 | 名前 | 値 |
 |------|-----|
-| `DATABASE-URL` | `mysql+pymysql://{username}:{password}@{host}.mysql.database.azure.com:3306/project_class4_db` |
+| `DATABASE-URL` | `mysql+pymysql://{username}:{password}@rg-001-gen11-step3-class4.mysql.database.azure.com:3306/project_class4_db` |
 | `JWT-SECRET-KEY` | 強力なランダム文字列 |
 | `GOOGLE-CLIENT-ID` | Google OAuth Client ID |
 | `AZURE-OPENAI-API-KEY` | Azure OpenAI API キー |

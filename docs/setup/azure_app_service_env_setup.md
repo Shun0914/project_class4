@@ -27,7 +27,7 @@
 
 | 環境変数名 | 値 | 説明 |
 |----------|-----|------|
-| `DATABASE_URL` | `mysql+pymysql://{username}:{password}@{host}.mysql.database.azure.com:3306/project_class4_db` | データベース接続文字列 |
+| `DATABASE_URL` | `mysql+pymysql://{username}:{password}@rg-001-gen11-step3-class4.mysql.database.azure.com:3306/project_class4_db` | データベース接続文字列 |
 | `JWT_SECRET_KEY` | ランダムな文字列（64文字以上推奨） | JWT認証の秘密鍵。本番では必ず強力な値に変更 |
 | `GOOGLE_CLIENT_ID` | Google Cloud Consoleで取得したClient ID | Google OAuth認証用 |
 | `ALLOWED_ORIGINS` | フロントエンドのURL（カンマ区切り） | CORSで許可するオリジン。例: `https://tech0-gen-11-step3-2-node-67.azurewebsites.net` |
@@ -75,7 +75,7 @@ Next.js はビルド時に `NEXT_PUBLIC_*` を埋め込みます。**GitHub Acti
 
 | 名前 | 値 |
 |------|-----|
-| `DATABASE_URL` | `mysql+pymysql://{username}:{password}@{host}.mysql.database.azure.com:3306/project_class4_db` |
+| `DATABASE_URL` | `mysql+pymysql://{username}:{password}@rg-001-gen11-step3-class4.mysql.database.azure.com:3306/project_class4_db` |
 | `JWT_SECRET_KEY` | 強力なランダム文字列 |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
 | `ALLOWED_ORIGINS` | `https://tech0-gen-11-step3-2-node-67.azurewebsites.net` |
