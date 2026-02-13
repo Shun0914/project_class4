@@ -8,6 +8,8 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import BottomNav from '@/lib/components/BottomNav';
 import { get } from '@/lib/api/client';
 import type { AnalyzeResponse, AIAnalyzeResponse } from '@/lib/types/analyze';
+import { ExpenseInputModal } from "./_components/ExpenseInputModal";
+
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
@@ -16,6 +18,8 @@ export default function HomePage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isInputOpen, setIsInputOpen] = useState(false);
+
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -163,7 +167,9 @@ export default function HomePage() {
 
           {/* Action Buttons */}
           <div className="grid grid-cols-3 gap-[12px]">
-            <button className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
+            <button 
+                onClick={() => setIsInputOpen(true)}
+                className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
               <span className="text-[#eb6b15] text-[24px]">+</span>
               <span className="text-[#eb6b15] text-[14px] font-bold">手入力</span>
             </button>
@@ -245,6 +251,21 @@ export default function HomePage() {
           </div>
         </div>
       )}
+      
+      {/* ★ 手入力モーダルをここに追加 */}
+      <ExpenseInputModal 
+        open={isInputOpen} 
+        onClose={() => setIsInputOpen(false)} 
+      />
+
+      <button
+        type="button"
+        aria-label="支出を入力"
+        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white text-3xl shadow-lg"
+        onClick={() => setIsInputOpen(true)}
+      >
+        +
+      </button>
 
       <BottomNav />
     </div>

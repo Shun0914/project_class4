@@ -14,8 +14,17 @@ class ExpenseKeyword(Base):
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # リレーションシップ
-    expense = relationship("Expense", backref="expense_keyword_relations")
-    keyword = relationship("Keyword", backref="expense_keyword_relations")
+    expense = relationship(
+        "Expense", 
+        back_populates="expense_keyword_relations",
+        overlaps="expenses,keywords"
+    )
+
+    keyword = relationship(
+        "Keyword", 
+        back_populates="expense_keyword_relations",
+        overlaps="expenses,keywords"
+    )
 
     def __repr__(self):
         return f"<ExpenseKeyword(expense_id={self.expense_id}, keyword_id={self.keyword_id})>"

@@ -1,8 +1,8 @@
-"""merge branches
+"""merge_all_heads
 
-Revision ID: 51b370abebc8
-Revises: 158da60e58be, b82b24165090
-Create Date: 2026-02-11 23:51:01.280921
+Revision ID: f3e2a8670fc2
+Revises: 5b9281fbcdf0, b82b24165090
+Create Date: 2026-02-12 21:49:41.858137
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '51b370abebc8'
-down_revision: Union[str, None] = ('b82b24165090')
+revision: str = 'f3e2a8670fc2'
+down_revision: Union[str, None] = ('5b9281fbcdf0', 'b82b24165090')
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
