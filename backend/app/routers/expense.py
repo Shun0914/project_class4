@@ -1,25 +1,35 @@
 # app/routes/expense.py
-from fastapi import APIRouter, Depends,Request, HTTPException, status,Query
+from fastapi import APIRouter, Depends, Request, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone, date
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import traceback
 import os
 
-from sqlalchemy import text
+from sqlalchemy import text, extract
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.db import engine,get_db
+from app.db import engine, get_db
 
 from google.auth.transport import requests as google_requests
 
 from app.models.user import User
+from app.models.expense import Expense
+from app.models.category import Category
 from app.core.security import get_current_user
 from app.schemas.expense import ExpenseCreateRequest
 
 
 router = APIRouter()
+
+
+def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
+    """エラーレスポンスを生成するヘルパー関数"""
+    return JSONResponse(
+        status_code=status_code,
+        content={"code": code, "message": message},
+    )
 
 
 # =========================
@@ -74,7 +84,7 @@ def insert_expense_record(
                     "expense_date": expense_date,
                 },
             )
-        new_id = result.lastrowid
+            new_id = result.lastrowid
         # TODO: Azure SQL の場合、lastrowid が使えない可能性あり。
         # uuid や別の方法で一意IDを取得する必要があるかも。(他のテーブルも同様)
 
@@ -88,13 +98,6 @@ def insert_expense_record(
             "created_at": now,
             "updated_at": now,
         }
-
-#    except SQLAlchemyError:
-#        # SQL詳細や入力値は外に出さない
-#        raise HTTPException(
-#            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#            detail="database error",
-#        )
 
 ## レビュー時にYoko追加 ここから ##
     except SQLAlchemyError as e:  # as e を追加
@@ -111,28 +114,60 @@ def insert_expense_record(
 ## レビュー時にYoko追加 ここまで ##
 
 
+@router.get("")
+def list_expenses(
+    year: int = Query(..., description="年"),
+    month: int = Query(..., ge=1, le=12, description="月"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """指定年月の支出一覧を取得する"""
+    try:
+        expenses = (
+            db.query(Expense, Category.name.label("category_name"))
+            .outerjoin(Category, Expense.category_id == Category.id)
+            .filter(
+                Expense.user_id == current_user.id,
+                extract("year", Expense.expense_date) == year,
+                extract("month", Expense.expense_date) == month,
+            )
+            .order_by(Expense.expense_date.desc(), Expense.id.desc())
+            .all()
+        )
+
+        result = []
+        for expense, category_name in expenses:
+            result.append({
+                "id": expense.id,
+                "item": expense.item,
+                "price": expense.price,
+                "expense_date": expense.expense_date.isoformat(),
+                "category_id": expense.category_id,
+                "category_name": category_name,
+                "created_at": expense.created_at.isoformat() if expense.created_at else None,
+            })
+
+        return {"expenses": result}
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"database error: {str(e)}",
+        )
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def register_expense(
-    payload: ExpenseCreateRequest, 
+    payload: ExpenseCreateRequest,
     request: Request,
     db: Session = Depends(get_db),
-    # ★修正箇所1: テスト用の username を削除し、current_user を有効化
-    current_user: User = Depends(get_current_user) 
+    current_user: User = Depends(get_current_user)
 ):
 
-    # レスポンス定義 (中略)
-
     try:
-        # -------------------------
-        # 1) 認証済みユーザーから ID を取得
-        # -------------------------
-        # ★修正箇所2: DBへのユーザー名問い合わせを全て削除し、トークンから得た current_user を使う
         user_id = current_user.id
 
-        # -------------------------
-        # 2) insert_expense_record で Azure SQL にデータ挿入
-        # -------------------------
-        # DB保存処理の実行
         saved = insert_expense_record(
             user_id=user_id,
             item=payload.item,
@@ -141,28 +176,20 @@ def register_expense(
             expense_date=payload.expense_date,
         )
 
-        # 3) 実行結果を return
         return {
             "success": True,
             "data": saved,
         }
 
-    #except Exception as e:
     except HTTPException as e:
         if e.status_code == status.HTTP_401_UNAUTHORIZED:
-            return err(status.HTTP_401_UNAUTHORIZED, "UNAUTHORIZED", "認証に失敗しました")
+            return _error_response(status.HTTP_401_UNAUTHORIZED, "UNAUTHORIZED", "認証に失敗しました")
         if e.status_code == status.HTTP_400_BAD_REQUEST:
-            return err(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "入力内容に誤りがあります")
+            return _error_response(status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "入力内容に誤りがあります")
         if e.status_code == status.HTTP_403_FORBIDDEN:
-            return err(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "この操作を行う権限がありません")
-        return err(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "サーバ内部でエラーが発生しました")
+            return _error_response(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "この操作を行う権限がありません")
+        return _error_response(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "サーバ内部でエラーが発生しました")
 
     except Exception as e:
-        # レビュー時にYoko追加　ここからこの2行を一時的に追加してエラーをターミナルに出す
-        import traceback
         traceback.print_exc()
-        return err(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", f"Debug: {str(e)}")
-        # レビュー時にYoko追加　ここまで#　
-
-        # ここで例外内容（payload含む可能性）をレスポンスに出さない
-        #return err(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "サーバ内部でエラーが発生しました")
+        return _error_response(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", f"Debug: {str(e)}")
