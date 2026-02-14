@@ -48,9 +48,10 @@ project_class4/
     │   ├── 体制図.md
     │   └── 体制図.png
     └── setup/           # セットアップ関連
-        ├── setup.md      #開発環境構築手順
-        ├── db_setup.md   #TBL移行手順
-        └── github_workflow.md
+        ├── setup.md      # 開発環境構築手順
+        ├── db_setup.md   # TBL移行手順
+        ├── github_workflow.md
+        └── azure_deployment_guide.md  # Azure 本番デプロイ手順
 ```
 
 **注意**: `gen12/`は12期生が作成した参考アプリです。実際の開発は`frontend/`と`backend/`で行います。
@@ -111,6 +112,7 @@ project_class4/
 - [GitHubワークフロー手順書](./docs/setup/github_workflow.md)
 - [開発環境セットアップ手順](./docs/setup/setup.md)
 - [TBL移行手順](./docs/setup/db_setup.md)
+- [Azure デプロイ手順書](./docs/setup/azure_deployment_guide.md)（本番環境）
 
 ---
 *プロジェクト開始日: 2026年1月28日*
