@@ -29,6 +29,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "https://tech0-gen-11-step3-2-node-67.azurewebsites.net",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
