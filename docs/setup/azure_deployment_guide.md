@@ -26,9 +26,29 @@
 | Azure App Service（Python） | **tech0-gen-11-step3-2-py-67** | バックエンド（FastAPI） |
 | Azure App Service（Node.js） | **tech0-gen-11-step3-2-node-67** | フロントエンド（Next.js） |
 | Azure Database for MySQL | **rg-001-gen11-step3-class4** | データベース |
-| Azure OpenAI | （リソース作成が必要） | AI 分析機能 |
+| Azure AI Foundry（Azure OpenAI 互換） | **af-gen11** | AI 分析機能 |
 
 ※ **Key Vault は未使用**。環境変数は App Service の「構成」に直接設定。
+
+### AI リソースの関係性（Azure AI Foundry）
+
+```
+[Azure AI Foundry]  ← ポータル（ai.azure.com）でモデルをデプロイ
+       |
+       v
+[af-gen11]  ← リソース名。エンドポイントのホスト部分
+       |
+       +-- エンドポイント: https://af-gen11.openai.azure.com/
+       +-- API バージョン: 2024-12-01-preview
+       +-- モデル: gpt-4o-mini（4o-mini）
+       +-- デプロイ名: Foundry でデプロイ時に付けた名前（model パラメータで指定）
+```
+
+- **Azure AI Foundry** … Azure の AI モデル管理ポータル（ai.azure.com）。従来の「Azure OpenAI」を統合した形態。OpenAI 互換 API でアクセス可能
+- **af-gen11** … このプロジェクトで使用する Foundry リソース名。エンドポイントは `https://af-gen11.openai.azure.com/`
+- **モデル名（4o-mini）** … 実際のモデル。`gpt-4o-mini` の略称
+- **API バージョン（2024-12-01-preview）** … 使用する REST API のバージョン。モデルごとにサポート版が異なる
+- **デプロイ名** … Foundry でモデルをデプロイする際に付ける名前。コードの `model` パラメータで指定。モデル名と同じでも、別名でも可
 
 ### デプロイ構成
 
@@ -137,10 +157,15 @@ app.add_middleware(
 | `JWT_SECRET_KEY` | ランダムな文字列（64文字以上推奨） |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
 | `ALLOWED_ORIGINS` | `https://tech0-gen-11-step3-2-node-67.azurewebsites.net` |
-| `AZURE_OPENAI_API_KEY` | Azure OpenAI API キー |
-| `AZURE_OPENAI_ENDPOINT` | `https://<リソース名>.openai.azure.com/` |
-| `AZURE_OPENAI_API_VERSION` | `2024-02-15-preview` |
-| `AZURE_OPENAI_DEPLOYMENT_NAME` | デプロイしたモデル名（例: gpt-4） |
+| `AZURE_OPENAI_API_KEY` | Azure AI Foundry の API キー |
+| `AZURE_OPENAI_ENDPOINT` | `https://af-gen11.openai.azure.com/`（Foundry リソース名） |
+| `AZURE_OPENAI_API_VERSION` | `2024-12-01-preview` |
+| `AZURE_OPENAI_DEPLOYMENT_NAME` | Foundry でデプロイした名前（例: `gpt-4o-mini` や `4o-mini`） |
+
+**本プロジェクトの AI 設定**:
+- リソース: **af-gen11**（Azure AI Foundry）
+- モデル: **gpt-4o-mini**（4o-mini）
+- API バージョン: **2024-12-01-preview**
 
 3. **「保存」** → **「続行」**
 

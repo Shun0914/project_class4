@@ -127,9 +127,9 @@ GET /api/ai-analyze
 
 **必要な環境変数**（Azure App Service）:
 - `AZURE_OPENAI_API_KEY`
-- `AZURE_OPENAI_ENDPOINT`
-- `AZURE_OPENAI_API_VERSION`
-- `AZURE_OPENAI_DEPLOYMENT_NAME`
+- `AZURE_OPENAI_ENDPOINT`（例: `https://af-gen11.openai.azure.com/`）
+- `AZURE_OPENAI_API_VERSION`（`2024-12-01-preview`）
+- `AZURE_OPENAI_DEPLOYMENT_NAME`（Foundry のデプロイ名。モデル: gpt-4o-mini / 4o-mini）
 
 ### POST `/expenses`
 ```json

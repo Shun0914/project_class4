@@ -34,7 +34,7 @@ project_class4 を Azure App Service にデプロイし、バックエンド（F
 | Azure App Service（Python） | **tech0-gen-11-step3-2-py-67** | バックエンド（FastAPI） |
 | Azure App Service（Node.js） | **tech0-gen-11-step3-2-node-67** | フロントエンド（Next.js） |
 | Azure Database for MySQL | **rg-001-gen11-step3-class4** | データベース |
-| Azure OpenAI | （リソース名は環境変数で指定） | AI 分析機能 |
+| Azure AI Foundry | **af-gen11**（4o-mini / 2024-12-01-preview） | AI 分析機能 |
 
 ※ **Azure Key Vault は未使用**。環境変数は App Service の「構成」に直接設定。
 
@@ -93,9 +93,9 @@ Azure App Service 向けに standalone ビルドを有効化。
 | `GOOGLE_CLIENT_ID` | Google OAuth |
 | `ALLOWED_ORIGINS` | CORS 許可オリジン |
 | `AZURE_OPENAI_API_KEY` | AI 分析 |
-| `AZURE_OPENAI_ENDPOINT` | AI 分析 |
-| `AZURE_OPENAI_API_VERSION` | AI 分析 |
-| `AZURE_OPENAI_DEPLOYMENT_NAME` | AI 分析 |
+| `AZURE_OPENAI_ENDPOINT` | AI 分析（例: `https://af-gen11.openai.azure.com/`） |
+| `AZURE_OPENAI_API_VERSION` | AI 分析（`2024-12-01-preview`） |
+| `AZURE_OPENAI_DEPLOYMENT_NAME` | AI 分析（デプロイ名。4o-mini の場合） |
 
 参照: [azure_deployment_guide.md](../setup/azure_deployment_guide.md)
 
