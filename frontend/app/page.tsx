@@ -9,6 +9,7 @@ import BottomNav from '@/lib/components/BottomNav';
 import { get } from '@/lib/api/client';
 import type { AnalyzeResponse, AIAnalyzeResponse } from '@/lib/types/analyze';
 import { ExpenseInputModal } from "./_components/ExpenseInputModal";
+import { HistoryModal } from "./_components/HistoryModal";
 
 
 export default function HomePage() {
@@ -19,6 +20,8 @@ export default function HomePage() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isInputOpen, setIsInputOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
 
   useEffect(() => {
@@ -191,7 +194,10 @@ export default function HomePage() {
               <span className="text-[#eb6b15] text-[20px]">¥</span>
               <span className="text-[#eb6b15] text-[14px] font-bold">予算設定</span>
             </button>
-            <button className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex items-center justify-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex items-center justify-center gap-[8px] hover:bg-[#fff5f0] transition-colors"
+            >
               <span className="text-[#eb6b15] text-[20px]">🔄</span>
               <span className="text-[#eb6b15] text-[14px] font-bold">内訳</span>
             </button>
@@ -252,10 +258,19 @@ export default function HomePage() {
         </div>
       )}
       
-      {/* ★ 手入力モーダルをここに追加 */}
-      <ExpenseInputModal 
-        open={isInputOpen} 
-        onClose={() => setIsInputOpen(false)} 
+      {/* 内訳モーダル */}
+      <HistoryModal
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onAddExpense={() => setIsInputOpen(true)}
+        refreshKey={historyRefreshKey}
+      />
+
+      {/* ★ 手入力モーダル（内訳モーダルより上に表示されるよう z-[70]） */}
+      <ExpenseInputModal
+        open={isInputOpen}
+        onClose={() => setIsInputOpen(false)}
+        onSuccess={() => setHistoryRefreshKey(k => k + 1)}
       />
 
       <button

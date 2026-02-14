@@ -5,6 +5,39 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 // バックエンド側の実装差を吸収するために候補を複数持つ
 const CANDIDATE_PATHS = ["/expenses", "/api/expenses"];
 
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const year = searchParams.get("year");
+  const month = searchParams.get("month");
+
+  for (const basePath of CANDIDATE_PATHS) {
+    try {
+      const target = new URL(`${basePath}?year=${year}&month=${month}`, BACKEND_URL);
+      const res = await fetch(target.toString(), {
+        method: "GET",
+        headers: {
+          "Authorization": req.headers.get("authorization") ?? "",
+        },
+      });
+
+      if (res.ok || res.status !== 404) {
+        const text = await res.text();
+        const contentType = res.headers.get("content-type") ?? "application/json";
+        return new NextResponse(text, { status: res.status, headers: { "Content-Type": contentType } });
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // 開発時はモックで空配列を返す
+  if (process.env.NODE_ENV !== "production") {
+    return NextResponse.json({ expenses: [] }, { status: 200, headers: { "x-mock": "1" } });
+  }
+
+  return new NextResponse("Backend is unreachable", { status: 502, headers: { "Content-Type": "text/plain" } });
+}
+
 async function forward(req: NextRequest, path: string) {
   const target = new URL(path, BACKEND_URL);
   const bodyText = await req.text();
