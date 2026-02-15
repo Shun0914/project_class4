@@ -19,8 +19,8 @@ from app.models.keyword import Keyword
 
 
 app = FastAPI(
-    title="まっちゃんウォレット(仮) API",
-    description="家計簿アプリ まっちゃんウォレット(仮) のAPI",
+    title="おかねのコーチ API",
+    description="AIコーチ付き家計簿アプリ おかねのコーチ のAPI",
     version="0.1.0"
 )
 
