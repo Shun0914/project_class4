@@ -1,0 +1,42 @@
+# Snyk 脆弱性スキャン（push/PR 時に自動実行）
+# 事前に GitHub リポジトリの Settings → Secrets and variables → Actions に
+# SNYK_TOKEN を登録してください（Snyk 管理画面の Account settings で取得）
+
+name: Snyk security scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  snyk-frontend:
+    name: Snyk (Frontend / Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Snyk for Node.js
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=frontend/package.json
+        continue-on-error: true  # 脆弱性があっても失敗にしない（厳しくするなら false に変更）
+
+  snyk-backend:
+    name: Snyk (Backend / Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Snyk for Python
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=backend/requirements.txt
+        continue-on-error: true
