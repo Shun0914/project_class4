@@ -45,7 +45,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(180deg,rgb(255,253,242)_0%,rgb(255,252,239)_45%,rgb(255,242,234)_100%)] px-4">
       {/* タイトル */}
-      <h1 className="mb-8 text-2xl font-bold text-[#0a0a0a]">4C Wallet</h1>
+      <h1 className="mb-8 text-2xl font-bold text-[#0a0a0a]">おかねのコーチ</h1>
 
       {/* カード */}
       <div className="w-full max-w-sm rounded-2xl bg-white/70 p-6 shadow-lg">
