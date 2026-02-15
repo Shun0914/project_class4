@@ -73,6 +73,8 @@ def main():
     print(f'curl -H "Authorization: Bearer {token}" {args.base_url}/api/auth/me')
     print(f'curl -H "Authorization: Bearer {token}" {args.base_url}/api/analyze')
     print(f'curl -H "Authorization: Bearer {token}" {args.base_url}/api/ai-analyze')
+    print(f'curl -H "Authorization: Bearer {token}" "{args.base_url}/api/budget?year=2026&month=2"')
+    print(f'curl -X PUT -H "Authorization: Bearer {token}" -H "Content-Type: application/json" -d \'{{"budget_year":2026,"budget_month":2,"monthly_budget":30000}}\' {args.base_url}/api/budget')
     print(f"\n※ Azure API をテストする場合、JWT_SECRET_KEY が Azure の環境変数と一致している必要があります")
     print(f"※ user_id={user_id} のユーザーが対象 DB に存在する必要があります")
 
