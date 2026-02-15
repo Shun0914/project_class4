@@ -19,9 +19,10 @@ const CATEGORY_MAP = [
 type Props = {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
-export function ExpenseInputModal({ open, onClose }: Props) {
+export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   // 日付の状態を Date オブジェクトで管理
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -47,6 +48,8 @@ export function ExpenseInputModal({ open, onClose }: Props) {
       setItem('');
       setPrice('');
       setCategoryId(1);
+      setSaving(false);
+      setSnack(null);
     }
   }, [open]);
 
@@ -62,7 +65,7 @@ export function ExpenseInputModal({ open, onClose }: Props) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
       const d = String(date.getDate()).padStart(2, '0');
-      
+
       await createExpense({
         item,
         price: Number(price),
@@ -70,9 +73,11 @@ export function ExpenseInputModal({ open, onClose }: Props) {
         category_id: categoryId,
       });
       setSnack({ kind: 'success', message: '登録完了' });
+      onSuccess?.();
       setTimeout(onClose, 1500);
     } catch (e) {
       setSnack({ kind: 'error', message: '保存に失敗しました' });
+    } finally {
       setSaving(false);
     }
   };
@@ -82,7 +87,7 @@ export function ExpenseInputModal({ open, onClose }: Props) {
   return (
     <AnimatePresence>
       {open && (
-        <div key="expense-modal-root" className="fixed inset-0 z-50 flex items-end justify-center">
+        <div key="expense-modal-root" className="fixed inset-0 z-[70] flex items-end justify-center">
           <motion.div 
             key="modal-overlay"
             className="absolute inset-0 bg-black/40"
