@@ -10,6 +10,7 @@ import { get } from '@/lib/api/client';
 import type { AnalyzeResponse, AIAnalyzeResponse } from '@/lib/types/analyze';
 import { ExpenseInputModal } from "./_components/ExpenseInputModal";
 import { HistoryModal } from "./_components/HistoryModal";
+import { BudgetSettingModal } from "./_components/BudgetSettingModal";
 
 
 export default function HomePage() {
@@ -21,6 +22,7 @@ export default function HomePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
 
@@ -116,11 +118,33 @@ export default function HomePage() {
               <div
                 className="absolute top-0 left-0 h-[20px] rounded-[8px] transition-all duration-300"
                 style={{
-                  background: 'linear-gradient(189.297deg, rgb(1, 183, 165) 23.571%, rgb(144, 229, 202) 48.801%, rgb(1, 183, 165) 74.03%)',
-                  width: `${100 - (data.remaining_rate || 0)}%`,
+                  background: data.remaining !== null && data.remaining < 0
+                    ? 'linear-gradient(189.297deg, rgb(241, 52, 52) 23.571%, rgb(252, 165, 165) 48.801%, rgb(241, 52, 52) 74.03%)'
+                    : 'linear-gradient(189.297deg, rgb(1, 183, 165) 23.571%, rgb(144, 229, 202) 48.801%, rgb(1, 183, 165) 74.03%)',
+                  width: `${Math.min(100, 100 - (data.remaining_rate || 0))}%`,
                 }}
               />
             </div>
+
+            {/* Budget Overrun Alert */}
+            {data.has_budget && data.remaining !== null && data.remaining < 0 && (
+              <div className="bg-[#fef2f2] border border-[#fca5a5] rounded-[8px] px-[12px] py-[10px] mb-[12px] flex items-center gap-[8px]">
+                <span className="text-[18px]">&#x26A0;&#xFE0F;</span>
+                <p className="text-[#dc2626] text-[13px] font-bold">
+                  予算を{Math.abs(data.remaining).toLocaleString()}円オーバーしています
+                </p>
+              </div>
+            )}
+
+            {/* Budget Warning (remaining <= 10%) */}
+            {data.has_budget && data.remaining !== null && data.remaining >= 0 && data.remaining_rate !== null && data.remaining_rate <= 10 && (
+              <div className="bg-[#fffbeb] border border-[#fcd34d] rounded-[8px] px-[12px] py-[10px] mb-[12px] flex items-center gap-[8px]">
+                <span className="text-[18px]">&#x26A1;</span>
+                <p className="text-[#d97706] text-[13px] font-bold">
+                  予算の残りが{data.remaining_rate.toFixed(0)}%です。節約を心がけましょう
+                </p>
+              </div>
+            )}
 
             {/* Budget Details with Angel/Demon Icon */}
             <div className="flex items-start gap-[16px]">
@@ -149,8 +173,8 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#478dff] text-[16px]">残金</span>
-                  <span className="font-bold text-[#478dff] text-[20px]">
+                  <span className={`text-[16px] ${data.remaining !== null && data.remaining < 0 ? 'text-[#f13434]' : 'text-[#478dff]'}`}>残金</span>
+                  <span className={`font-bold text-[20px] ${data.remaining !== null && data.remaining < 0 ? 'text-[#f13434]' : 'text-[#478dff]'}`}>
                     {data.remaining !== null ? `${data.remaining.toLocaleString()}円` : '未設定'}
                   </span>
                 </div>
@@ -190,9 +214,16 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-[12px]">
-            <button className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex items-center justify-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
-              <span className="text-[#eb6b15] text-[20px]">¥</span>
-              <span className="text-[#eb6b15] text-[14px] font-bold">予算設定</span>
+            <button
+              onClick={() => setIsBudgetOpen(true)}
+              className={`rounded-[12px] p-[16px] flex items-center justify-center gap-[8px] transition-colors ${
+                data.has_budget
+                  ? 'bg-white border-2 border-[#eb6b15] hover:bg-[#fff5f0]'
+                  : 'bg-[#eb6b15] border-2 border-[#eb6b15] hover:bg-[#d15a0a]'
+              }`}
+            >
+              <span className={`text-[20px] ${data.has_budget ? 'text-[#eb6b15]' : 'text-white'}`}>¥</span>
+              <span className={`text-[14px] font-bold ${data.has_budget ? 'text-[#eb6b15]' : 'text-white'}`}>予算設定</span>
             </button>
             <button
               onClick={() => setIsHistoryOpen(true)}
@@ -264,6 +295,18 @@ export default function HomePage() {
         onClose={() => setIsHistoryOpen(false)}
         onAddExpense={() => setIsInputOpen(true)}
         refreshKey={historyRefreshKey}
+      />
+
+      {/* 予算設定モーダル */}
+      <BudgetSettingModal
+        open={isBudgetOpen}
+        onClose={() => setIsBudgetOpen(false)}
+        currentBudget={data.budget}
+        onSuccess={() => {
+          get<AnalyzeResponse>('/api/analyze')
+            .then(setData)
+            .catch(console.error);
+        }}
       />
 
       {/* ★ 手入力モーダル（内訳モーダルより上に表示されるよう z-[70]） */}

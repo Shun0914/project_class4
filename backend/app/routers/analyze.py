@@ -11,7 +11,10 @@ from app.models.budget import Budget
 from app.schemas.analyze import AnalyzeResponse, WeeklyReport, AIAnalyzeResponse
 from app.core.security import get_current_user
 from openai import AzureOpenAI
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 
 # OpenAI クライアント初期化
@@ -46,7 +49,11 @@ def _get_monthly_expense_data(user_id: int, db: Session) -> tuple[int, int | Non
         Expense.expense_date <= month_end
     ).scalar() or 0
     
-    budget_obj = db.query(Budget).filter(Budget.user_id == user_id).first()
+    budget_obj = db.query(Budget).filter(
+        Budget.user_id == user_id,
+        Budget.budget_year == today.year,
+        Budget.budget_month == today.month,
+    ).first()
     budget = budget_obj.monthly_budget if budget_obj else None
     
     return total, budget
