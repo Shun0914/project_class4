@@ -1,6 +1,7 @@
 # Snyk 脆弱性スキャン（push/PR 時に自動実行）
-# 事前に GitHub リポジトリの Settings → Secrets and variables → Actions に
-# SNYK_TOKEN を登録してください（Snyk 管理画面の Account settings で取得）
+# - 依存関係: test + monitor（monitor で Snyk にスナップショット送信 → Fix PR の元になる）
+# - コード: Snyk Code でソースコードをスキャン
+# 事前に GitHub Secrets に SNYK_TOKEN を登録してください。
 
 name: Snyk security scan
 
@@ -19,13 +20,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Snyk for Node.js
+      - name: Set up Node and install dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+
+      - name: Snyk test (Node)
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --file=frontend/package.json
-        continue-on-error: true  # 脆弱性があっても失敗にしない（厳しくするなら false に変更）
+        continue-on-error: true
+
+      - name: Snyk monitor (Node) – スナップショット送信（Fix PR 用）
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=frontend/package.json
+        continue-on-error: true
 
   snyk-backend:
     name: Snyk (Backend / Python)
@@ -33,10 +52,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Snyk for Python
+      - name: Snyk test (Python)
         uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --file=backend/requirements.txt
+        continue-on-error: true
+
+      - name: Snyk monitor (Python) – スナップショット送信（Fix PR 用）
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=backend/requirements.txt
+        continue-on-error: true
+
+  snyk-code:
+    name: Snyk Code（ソースコードスキャン）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Snyk Code test
+        run: snyk code test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
