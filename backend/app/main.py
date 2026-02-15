@@ -16,6 +16,7 @@ from app.models.expense_evaluation import ExpenseEvaluation
 from app.models.detection_history import DetectionHistory
 from app.models.receipt_image import ReceiptImage
 from app.models.keyword import Keyword
+from app.routers import receipt
 
 
 app = FastAPI(
@@ -40,6 +41,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(analyze.router)
 app.include_router(expense_router, prefix="/expenses")
+app.include_router(receipt.router)
 
 @app.get("/")
 def read_root():
