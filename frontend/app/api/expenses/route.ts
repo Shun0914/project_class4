@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // バックエンド側の実装差を吸収するために候補を複数持つ
 const CANDIDATE_PATHS = ["/expenses", "/api/expenses"];
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
   // 2) ここまで来たら「バックエンド未起動 or どのパスも無い」
   // 開発中はモックで成功させてUI実装を先に完了させる
   if (process.env.NODE_ENV !== "production") {
-    let payload: any = {};
+    let payload: Record<string, unknown> = {};
     try {
       payload = await req.json();
     } catch {}
