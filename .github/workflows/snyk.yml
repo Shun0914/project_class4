@@ -128,7 +128,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 起票した Issue をマイルストーンに紐付け（ID=4: Quality Assurance）
+      - name: "起票した Issue をマイルストーンに紐付け（ID=4: Quality Assurance）"
         if: steps.snyk-issue.outcome == 'success'
         run: |
           ISSUE_NO=$(gh issue list \
