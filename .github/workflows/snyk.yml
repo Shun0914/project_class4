@@ -1,8 +1,6 @@
 # Snyk 脆弱性スキャン（push/PR 時に自動実行）
-# - 依存関係: test + monitor（monitor で Snyk にスナップショット送信 → Fix PR の元になる）
-# - 既存の脆弱性にも PR を出したい場合: Snyk 管理画面で「Backlog PRs」を有効にすること。
-#   （Fix PRs = 新規検出時のみ / Backlog PRs = 既知のバックログにも PR を自動作成）
-# - コード: Snyk Code でソースコードをスキャンし、結果を SARIF で Issue 1 件を自動作成（リファクタ用バックログ・マイルストーン QA に紐付け。コードの自動修正はされない）
+# - 依存関係: test + monitor（スナップショット送信。GitHub 連携側で Fix/Backlog PR 運用する想定）
+# - コード: Snyk Code でスキャンし、結果を Issue 1 件自動作成（QA マイルストーン紐付け）
 # 事前に GitHub Secrets に SNYK_TOKEN を登録してください。
 
 name: Snyk security scan
@@ -17,11 +15,10 @@ on:
 
 jobs:
   snyk-frontend:
-    name: Snyk (Frontend / Node)
+    name: Snyk (Frontend / Node) – スナップショット
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Node and install dependencies
         uses: actions/setup-node@v4
         with:
@@ -30,7 +27,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-
       - name: Snyk test (Node)
         uses: snyk/actions/node@master
         env:
@@ -38,8 +34,7 @@ jobs:
         with:
           args: --file=frontend/package.json
         continue-on-error: true
-
-      - name: Snyk monitor (Node) – スナップショット送信（Fix PR 用）
+      - name: Snyk monitor (Node) – スナップショット送信
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -49,11 +44,10 @@ jobs:
         continue-on-error: true
 
   snyk-backend:
-    name: Snyk (Backend / Python)
+    name: Snyk (Backend / Python) – スナップショット
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python and install dependencies
         uses: actions/setup-python@v5
         with:
@@ -62,17 +56,14 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
         working-directory: backend
-
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
-
       - name: Snyk test (Python)
         run: snyk test --file=backend/requirements.txt
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-
-      - name: Snyk monitor (Python) – スナップショット送信（Fix PR 用）
+      - name: Snyk monitor (Python) – スナップショット送信
         run: snyk monitor --file=backend/requirements.txt
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -121,7 +112,7 @@ jobs:
           gh issue create \
             --title "Snyk Code スキャン結果（セキュリティ・リファクタ用）" \
             --body-file body.md \
-            --label "security"
+            --label "QA"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
