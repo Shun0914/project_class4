@@ -96,18 +96,34 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
 
+      # SARIF から Issue 本文を生成（Docker 依存の sarif-to-issue-action は jq 依存でビルド落ちするため自前で実施）
+      - name: SARIF から Issue 本文を生成
+        id: issue-body
+        if: always() && hashFiles('snyk-code.sarif') != ''
+        run: |
+          echo "## Snyk Code スキャン結果" > body.md
+          echo "" >> body.md
+          echo "スキャン日時: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> body.md
+          echo "" >> body.md
+          COUNT=$(jq -r '(.runs[0].results // []) | length' snyk-code.sarif 2>/dev/null || echo "0")
+          echo "検出件数: ${COUNT}件" >> body.md
+          echo "" >> body.md
+          if [ "$COUNT" -gt 0 ]; then
+            echo "### 検出内容" >> body.md
+            echo "" >> body.md
+            jq -r '(.runs[0].results // [])[] | "- **\(.level // "warning")** \(.ruleId // "n/a"): \(.message.text) — `\(.locations[0].physicalLocation.artifactLocation.uri // "?"):\(.locations[0].physicalLocation.region.startLine // "?")`"' snyk-code.sarif 2>/dev/null >> body.md || true
+          fi
+
       - name: Snyk Code 結果を GitHub Issue で起票（リファクタ用バックログ）
         id: snyk-issue
-        if: always() && hashFiles('snyk-code.sarif') != ''
-        uses: sett-and-hive/sarif-to-issue-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          branch: ${{ github.head_ref || github.ref_name }}
-          sarif-file: snyk-code.sarif
-          title: "Snyk Code スキャン結果（セキュリティ・リファクタ用）"
-          labels: security
-          dry-run: false
+        if: steps.issue-body.outcome == 'success'
+        run: |
+          gh issue create \
+            --title "Snyk Code スキャン結果（セキュリティ・リファクタ用）" \
+            --body-file body.md \
+            --label "security"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 起票した Issue をマイルストーン「Quality Assurance」に紐付け
         if: steps.snyk-issue.outcome == 'success'
