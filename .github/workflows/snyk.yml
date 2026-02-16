@@ -1,6 +1,6 @@
 # Snyk 脆弱性スキャン（push/PR 時に自動実行）
 # - 依存関係: test + monitor（スナップショット送信。GitHub 連携側で Fix/Backlog PR 運用する想定）
-# - コード: Snyk Code でスキャンし、結果を Issue 1 件自動作成（QA マイルストーン紐付け）
+# - コード: Snyk Code でスキャンし、結果を Issue 1 件自動作成
 # 事前に GitHub Secrets に SNYK_TOKEN を登録してください。
 
 name: Snyk security scan
@@ -128,15 +128,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "起票した Issue をマイルストーンに紐付け（ID=4: Quality Assurance）"
-        if: steps.snyk-issue.outcome == 'success'
-        run: |
-          ISSUE_NO=$(gh issue list \
-            --search "Snyk Code スキャン結果 in:title repo:${{ github.repository }}" \
-            --state open --limit 10 \
-            --json number,createdAt -q 'sort_by(.createdAt) | reverse | .[0].number // empty')
-          if [ -n "$ISSUE_NO" ]; then
-            gh api -X PATCH "repos/${{ github.repository }}/issues/${ISSUE_NO}" -f milestone=4
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
