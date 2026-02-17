@@ -38,7 +38,9 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mx-4 mb-6 mt-8 rounded-2xl bg-white/90 shadow-lg backdrop-blur-sm">
+    // デザイン改善 #60: フッター背景色を透明度のある白に設定済み (bg-white/90)
+    // デザイン改善 #60: ナビゲーションバーのpadding削除
+    <nav className="mx-4 mb-6 rounded-2xl rgba(255, 255, 255, 0.99) shadow-lg backdrop-blur-sm">
       <div className="flex items-center justify-around py-3">
         {tabs.map((tab) => {
           const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);

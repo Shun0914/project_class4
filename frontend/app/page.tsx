@@ -85,13 +85,15 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[#fffdf2]">
-      <div className="flex-1 overflow-y-auto px-[16px] pt-[60px] pb-[120px]">
+      {/* デザイン改善 #60: 上下部余白を10pxに変更 */}
+      <div className="flex-1 overflow-y-auto px-[16px] pt-[10px] pb-[10px]">
         <div className="flex flex-col gap-[16px] w-full">
           {/* Greeting */}
           <div className="flex flex-col gap-[4px] items-center text-center">
-            <p className="font-bold text-[#2a3449] text-[16px]">
+            {/* デザイン改善 #60: 単独の日付表示を削除 */}
+            {/* <p className="font-bold text-[#2a3449] text-[16px]">
               {today.getMonth() + 1}月{today.getDate()}日
-            </p>
+            </p> */}
             <p className="font-bold text-[#2a3449] text-[26px]">
               {greeting}
             </p>
@@ -104,8 +106,9 @@ export default function HomePage() {
           <div className="bg-white/80 rounded-[16px] p-[16px] shadow-sm">
             {/* Month and Remaining Days */}
             <div className="flex items-center justify-between mb-[12px]">
+              {/* デザイン改善 #60: 日付を追加して「2026年02月17日」形式で表示 */}
               <p className="font-bold text-[#2a3449] text-[16px]">
-                {today.getFullYear()}年{String(today.getMonth() + 1).padStart(2, '0')}月
+                {today.getFullYear()}年{String(today.getMonth() + 1).padStart(2, '0')}月{String(today.getDate()).padStart(2, '0')}日
               </p>
               <p className="font-bold text-[#01b7a5] text-[16px]">
                 残り{remainingDays}日！
@@ -128,7 +131,7 @@ export default function HomePage() {
 
             {/* Budget Overrun Alert */}
             {data.has_budget && data.remaining !== null && data.remaining < 0 && (
-              <div className="bg-[#fef2f2] border border-[#fca5a5] rounded-[8px] px-[12px] py-[10px] mb-[12px] flex items-center gap-[8px]">
+              <div className="bg-[#fef2f2] border border-[#fca5a5] rounded-[8px] px-[12px] py-[1px] mb-[12px] flex items-center gap-[8px]">
                 <span className="text-[18px]">&#x26A0;&#xFE0F;</span>
                 <p className="text-[#dc2626] text-[13px] font-bold">
                   予算を{Math.abs(data.remaining).toLocaleString()}円オーバーしています
@@ -149,7 +152,8 @@ export default function HomePage() {
             {/* Budget Details with Angel/Demon Icon */}
             <div className="flex items-start gap-[16px]">
               {/* Angel/Demon Image */}
-              <div className="shrink-0 w-[80px] h-[80px]">
+              {/* デザイン改善 #60: キャラクター画像の位置を中央揃えに修正 */}
+              <div className="shrink-0 w-[80px] h-[80px] flex items-center justify-center">
                 <Image
                   src={data.coach_mode === 'angel' ? '/angel.svg' : '/demon.svg'}
                   alt={data.coach_mode === 'angel' ? '天使' : '鬼'}
@@ -182,18 +186,19 @@ export default function HomePage() {
             </div>
 
             {/* Weekly Report */}
+            {/* デザイン改善 #60: 週間レポートを4行から3行に変更 */}
             <div className="mt-[16px] pt-[16px] border-t border-[#e2e9f2]">
               <p className="text-[#0a0604] text-[14px] leading-relaxed">
                 {data.weekly_report.start_date} ~ {data.weekly_report.end_date}<br />
-                合計{data.weekly_report.total.toLocaleString()}円使用しました。<br />
-                （{data.weekly_report.count}件、平均{data.weekly_report.average.toLocaleString()}円）<br />
+                合計{data.weekly_report.total.toLocaleString()}円使用しました。（{data.weekly_report.count}件、平均{data.weekly_report.average.toLocaleString()}円）<br />
                 {data.weekly_report.coach_message}
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-3 gap-[12px]">
+          {/* デザイン改善 #60: ボタンエリアの上部マージンを約40%削減 */}
+          <div className="grid grid-cols-3 gap-[12px] mt-[-6px]">
             <button 
                 onClick={() => setIsInputOpen(true)}
                 className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
@@ -213,7 +218,8 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-[12px]">
+          {/* デザイン改善 #60: ボタンエリアの上部マージンを約20〜30%削減 */}
+          <div className="grid grid-cols-2 gap-[12px] mt-[-4px]">
             <button
               onClick={() => setIsBudgetOpen(true)}
               className={`rounded-[12px] p-[16px] flex items-center justify-center gap-[8px] transition-colors ${
@@ -316,10 +322,11 @@ export default function HomePage() {
         onSuccess={() => setHistoryRefreshKey(k => k + 1)}
       />
 
+      {/* デザイン改善 #60: フローティングボタンを小さくして固定位置で表示（内訳ボタンの近く、ナビゲーションバーと被らないように） */}
       <button
         type="button"
         aria-label="支出を入力"
-        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white text-3xl shadow-lg"
+        className="fixed bottom-[100px] right-[calc(50%-195px+16px+8px)] z-40 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white text-2xl shadow-lg"
         onClick={() => setIsInputOpen(true)}
       >
         +
