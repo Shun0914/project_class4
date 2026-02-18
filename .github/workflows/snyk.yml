@@ -1,0 +1,130 @@
+# Snyk 脆弱性スキャン（push/PR 時に自動実行）
+# - 依存関係: test + monitor（スナップショット送信。GitHub 連携側で Fix/Backlog PR 運用する想定）
+# - コード: Snyk Code でスキャンし、結果を Issue 1 件自動作成
+# 事前に GitHub Secrets に SNYK_TOKEN を登録してください。
+
+name: Snyk security scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  snyk-frontend:
+    name: Snyk (Frontend / Node) – スナップショット
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node and install dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Snyk test (Node)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=frontend/package.json
+        continue-on-error: true
+      - name: Snyk monitor (Node) – スナップショット送信
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=frontend/package.json
+        continue-on-error: true
+
+  snyk-backend:
+    name: Snyk (Backend / Python) – スナップショット
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python and install dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+        working-directory: backend
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+      - name: Snyk test (Python)
+        run: snyk test --file=backend/requirements.txt
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+      - name: Snyk monitor (Python) – スナップショット送信
+        run: snyk monitor --file=backend/requirements.txt
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
+  snyk-code:
+    name: Snyk Code（ソースコードスキャン）
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Snyk Code test（SARIF 出力）
+        run: snyk code test --sarif-file-output=snyk-code.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
+      # SARIF から Issue 本文を生成（ルール別にグループ化して見やすく）
+      - name: SARIF から Issue 本文を生成
+        id: issue-body
+        if: always() && hashFiles('snyk-code.sarif') != ''
+        run: |
+          echo "## Snyk Code スキャン結果" > body.md
+          echo "" >> body.md
+          echo "**スキャン日時:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> body.md
+          echo "" >> body.md
+          COUNT=$(jq -r '(.runs[0].results // []) | length' snyk-code.sarif 2>/dev/null || echo "0")
+          echo "**検出件数:** ${COUNT}件" >> body.md
+          echo "" >> body.md
+          if [ "$COUNT" -gt 0 ]; then
+            echo "### サマリー（ルール別）" >> body.md
+            echo "" >> body.md
+            echo "| ルール | 件数 |" >> body.md
+            echo "|--------|------|" >> body.md
+            jq -r '(.runs[0].results // []) | group_by(.ruleId) | .[] | "| " + (.[0].ruleId // "n/a") + " | " + (length | tostring) + "件 |"' snyk-code.sarif 2>/dev/null >> body.md || true
+            echo "" >> body.md
+            echo "### 詳細（ルール別）" >> body.md
+            echo "" >> body.md
+            jq -r '
+              (.runs[0].results // []) | group_by(.ruleId) | .[] |
+              "#### " + (.[0].ruleId // "n/a") + "\n\n" +
+              (map(
+                "- `" + (.locations[0].physicalLocation.artifactLocation.uri // "?") + ":" + ((.locations[0].physicalLocation.region.startLine // 0) | tostring) + "` — " + (.message.text // "")
+              ) | join("\n")) + "\n"
+            ' snyk-code.sarif 2>/dev/null >> body.md || true
+          fi
+
+      - name: Snyk Code 結果を GitHub Issue で起票（リファクタ用バックログ）
+        id: snyk-issue
+        if: steps.issue-body.outcome == 'success'
+        run: |
+          gh issue create \
+            --title "Snyk Code スキャン結果（セキュリティ・リファクタ用）" \
+            --body-file body.md \
+            --label "QA"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

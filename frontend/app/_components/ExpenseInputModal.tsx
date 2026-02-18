@@ -118,10 +118,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
             <div className="flex-1 overflow-y-auto px-[16px] py-[24px] space-y-6">
               {/* 日付選択ボタン */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">日付</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">日付</label>
                 <button
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full px-[16px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[14px] text-[#2a3449] flex items-center justify-between text-left"
+                  className="w-full px-[16px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] text-[#2a3449] flex items-center justify-between text-left"
                 >
                   <span>{formatDateForDisplay(date)}</span>
                   <Calendar className="size-[18px] text-[#7c7a78]" />
@@ -130,38 +130,51 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
 
               {/* 商品名 */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">商品名</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">商品名</label>
                 <input 
+                  name="purchase_item"
                   value={item} 
                   onChange={e => setItem(e.target.value)}
-                  className="w-full px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] text-[14px] outline-none focus:border-[#eb6b15]" 
+                  className="w-full px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]" 
                   placeholder="例）コーヒー"
                 />
               </div>
 
               {/* 金額 */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">金額</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">金額</label>
                 <div className="relative">
                   <input 
-                    type="number" 
-                    value={price} 
-                    onChange={e => setPrice(e.target.value)}
-                    className="w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] text-[14px] outline-none focus:border-[#eb6b15]" 
+                    name="price"
+                    type="text"
+                    inputMode = "numeric" 
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    value={
+                      price
+                      ? Number(String(price).replace(/,/g, "")).toLocaleString("ja-JP")
+                      : ""
+                    }
+                    onChange={(e) => {
+                      const numeric = e.target.value.replace(/[^\d]/g, "");
+                      setPrice(numeric)
+                    }}
+                    className="w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]" 
                   />
-                  <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[14px] text-[#7c7a78]">円</span>
+                  <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[16px] text-[#7c7a78]">円</span>
                 </div>
               </div>
 
               {/* カテゴリー */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">カテゴリー</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">カテゴリー</label>
                 <div className="relative">
                   <div className="absolute left-[16px] top-1/2 -translate-y-1/2 size-[8px] rounded-full" style={{ backgroundColor: currentCategoryColor }} />
                   <select 
                     value={categoryId} 
                     onChange={e => setCategoryId(Number(e.target.value))}
-                    className="w-full pl-[32px] pr-[40px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[14px] appearance-none outline-none focus:border-[#eb6b15]"
+                    className="w-full pl-[32px] pr-[40px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] appearance-none outline-none focus:border-[#eb6b15]"
                   >
                     {CATEGORY_MAP.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -177,7 +190,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
               <button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="w-full bg-[#eb6b15] text-white font-bold py-[14px] rounded-[8px] hover:bg-[#d15a0a] disabled:opacity-50 transition-colors text-[16px]"
+                className="w-full bg-[#eb6b15] text-white font-bold py-[16px] rounded-[8px] hover:bg-[#d15a0a] disabled:opacity-50 transition-colors text-[16px]"
               >
                 {saving ? '保存中...' : '保存する'}
               </button>

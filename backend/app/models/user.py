@@ -21,7 +21,7 @@ class User(Base):
 
     # リレーションシップ
     expenses = relationship("Expense", back_populates="user")
-    budget = relationship("Budget", back_populates="user", uselist=False)
+    budgets = relationship("Budget", back_populates="user")
     expense_evaluations = relationship("ExpenseEvaluation", back_populates="user")
     detection_histories = relationship("DetectionHistory", back_populates="user")
     # weekly_reports = relationship("WeeklyReport", back_populates="user")

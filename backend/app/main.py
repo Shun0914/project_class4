@@ -6,6 +6,7 @@ from uuid import uuid5
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import analyze
 from app.routers import auth
+from app.routers import budget
 from app.routers.expense import router as expense_router
 
 from app.models.user import User
@@ -20,8 +21,8 @@ from app.routers import receipt
 
 
 app = FastAPI(
-    title="まっちゃんウォレット(仮) API",
-    description="家計簿アプリ まっちゃんウォレット(仮) のAPI",
+    title="おかねのコーチ API",
+    description="AIコーチ付き家計簿アプリ おかねのコーチ のAPI",
     version="0.1.0"
 )
 
@@ -33,13 +34,14 @@ app.add_middleware(
         "https://tech0-gen-11-step3-2-node-67.azurewebsites.net",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
 # ルーターの登録
 app.include_router(auth.router)
 app.include_router(analyze.router)
+app.include_router(budget.router)
 app.include_router(expense_router, prefix="/expenses")
 app.include_router(receipt.router)
 

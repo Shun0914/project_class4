@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "まっちゃんウォレット(仮)",
-  description: "家計簿アプリ まっちゃんウォレット(仮)",
+  title: "おかねのコーチ",
+  description: "AIコーチ付き家計簿アプリ おかねのコーチ",
 };
 
 export default function RootLayout({
