@@ -220,10 +220,10 @@ export function BudgetSettingModal({
             <div className="flex-1 overflow-y-auto px-[16px] py-[24px] space-y-5">
               {/* 年月 */}
               <div className="flex flex-col gap-[6px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">年月</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">年月</label>
                 <button
                   onClick={openPicker}
-                  className="w-full text-left px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] bg-white text-[14px] text-[#2a3449]"
+                  className="w-full text-left px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] bg-white text-[16px] text-[#2a3449]"
                 >
                   {year}年{month}月
                 </button>
@@ -231,17 +231,27 @@ export function BudgetSettingModal({
 
               {/* 予算額 */}
               <div className="flex flex-col gap-[6px]">
-                <label className="font-bold text-[14px] text-[#2a3449]">予算額</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">予算額</label>
                 <div className="relative">
                   <input
-                    type="number"
+                    type="text"
                     inputMode="numeric"
-                    value={budgetValue}
-                    onChange={(e) => setBudgetValue(e.target.value)}
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    value={
+                      budgetValue
+                        ? Number(String(budgetValue).replace(/,/g, "")).toLocaleString("ja-JP")
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const numeric = e.target.value.replace(/[^\d]/g, "");
+                      setBudgetValue(numeric)
+                    }}
                     placeholder="10,000"
-                    className="no-spinner w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] bg-white text-[14px] outline-none focus:border-[#eb6b15]"
+                    className="no-spinner w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] bg-white text-[16px] outline-none focus:border-[#eb6b15]"
                   />
-                  <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[14px] text-[#7c7a78]">
+                  <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[16px] text-[#7c7a78]">
                     円
                   </span>
                 </div>
@@ -251,7 +261,7 @@ export function BudgetSettingModal({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-gradient-to-r from-[#f5a047] to-[#f7b563] text-white font-bold py-[14px] rounded-[8px] hover:from-[#e08f36] hover:to-[#e6a552] disabled:opacity-50 transition-colors text-[16px]"
+                className="w-full bg-gradient-to-r from-[#f5a047] to-[#f7b563] text-white font-bold py-[16px] rounded-[8px] hover:from-[#e08f36] hover:to-[#e6a552] disabled:opacity-50 transition-colors text-[16px]"
               >
                 {saving ? '保存中...' : '保存する'}
               </button>
