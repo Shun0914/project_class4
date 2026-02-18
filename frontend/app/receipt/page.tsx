@@ -1,12 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation'; 
+import Link from 'next/link';
+import { AnalysisResult } from './types';
+import CameraUpload from './components/CameraUpload';
+import EditModal from './components/EditModal';
 
 export default function ReceiptPage() {
+  const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // input要素への参照を作成
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 画面遷移時に自動でファイル選択（カメラ）を起動する
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (fileInputRef.current && !image && !loading && !result) {
+        fileInputRef.current.click();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 解析API呼び出し
   const handleUpload = async () => {
     if (!image) return;
     setLoading(true);
@@ -18,100 +41,116 @@ export default function ReceiptPage() {
         method: 'POST',
         body: formData,
       });
-      const data = await response.json();
-      setResult(data.data);
+
+      if (!response.ok) throw new Error('解析失敗');
+
+      // バックエンドから直接データが返ってくる想定でシンプルに受け取る
+      const data: AnalysisResult = await response.json();
+      setResult(data);
+      setIsModalOpen(true);
     } catch (error) {
-      alert('解析に失敗しました。もう一度お試しください。');
+      console.error(error);
+      alert('レシートの解析に失敗しました。もう一度お試しください。');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8 text-slate-900">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-3xl font-black mb-8 text-center text-blue-900">レシート読み込み</h1>
+  // 保存処理
+  const handleSave = async () => {
+    if (!result) return;
+    setSaving(true);
 
-        {/* アップロードエリア */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-gray-200 mb-6">
-          <label className="block mb-4 text-center font-bold text-gray-700">
-            レシートを撮影または選択
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2"
-          />
-          {image && (
-            <p className="mt-4 text-center text-blue-600 font-bold">
-              📸 準備OK: {image.name}
-            </p>
-          )}
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      alert('ログインしてください。');
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const savePromises = result.items.map(async (item) => {
+        if (!item.name || item.price === 0) return;
+        
+        // user_idはバックエンド側でトークンから取得するため不要です
+        const expenseData = {
+          expense_date: result.date,
+          store: result.store, 
+          item: item.name,
+          price: Number(item.price),
+          category_id: 1, // 仮のカテゴリID
+        };
+
+        const res = await fetch('http://localhost:8000/expenses', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify(expenseData),
+        });
+
+        if (!res.ok) throw new Error('保存失敗');
+      });
+
+      await Promise.all(savePromises);
+      alert('すべての明細を保存しました！');
+      
+      // 保存成功後、モーダルを閉じてホーム画面に戻る
+      setIsModalOpen(false);
+      router.push('/'); // ← ホーム画面へ自動遷移
+      
+    } catch (error) {
+      console.error(error);
+      alert('保存に失敗しました。ログイン状態を確認してください。');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  return (
+    <div className="min-h-screen bg-[#fdfaf5] p-4 pb-20 text-gray-800">
+      <div className="max-w-md mx-auto pt-6">
+        
+        {/* ヘッダー部分（戻るボタンあり） */}
+        <div className="relative flex items-center justify-center mb-8">
+          <Link 
+            href="/" 
+            className="absolute left-0 p-2 text-gray-500 hover:text-[#ff914d] transition-colors rounded-full hover:bg-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-800">レシート入力</h1>
         </div>
 
-        {/* 解析ボタン */}
+        <CameraUpload 
+          onFileSelect={setImage} 
+          isLoading={loading} 
+          imageName={image?.name || null}
+          fileInputRef={fileInputRef}
+        />
+
         <button
           onClick={handleUpload}
           disabled={!image || loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-black py-4 rounded-2xl shadow-xl disabled:bg-gray-400 transition-all mb-10"
+          className="w-full mt-8 bg-gradient-to-r from-[#ffbd59] to-[#ff914d] hover:opacity-95 text-white text-xl font-bold py-4 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          {loading ? 'AIが解析中...' : 'レシートを読み込む'}
+          {loading ? 'AIが解析中...' : '読み取る'}
         </button>
 
-        {/* 編集・確認フォーム */}
+        {/* 編集モーダル */}
         {result && (
-          <div className="bg-white p-6 rounded-2xl shadow-2xl border border-gray-300 animate-in fade-in duration-500">
-            <h2 className="text-2xl font-black mb-6 border-b-4 border-blue-500 pb-2">読み取り内容を確認</h2>
-            
-            <div className="space-y-6">
-              {/* 店名・日付 */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-black text-gray-500 uppercase tracking-wider">店名</label>
-                  <input type="text" className="w-full p-3 border-2 border-gray-300 rounded-xl font-bold text-lg text-black focus:border-blue-500 outline-none" defaultValue={result.store} />
-                </div>
-                <div>
-                  <label className="block text-sm font-black text-gray-500 uppercase tracking-wider">日付</label>
-                  <input type="date" className="w-full p-3 border-2 border-gray-300 rounded-xl font-bold text-lg text-black focus:border-blue-500 outline-none" defaultValue={result.date} />
-                </div>
-              </div>
-
-              {/* 品目リスト */}
-              <div>
-                <label className="block text-sm font-black text-gray-500 mb-2 uppercase tracking-wider">品目リスト</label>
-                <div className="space-y-3">
-                  {result.items?.map((item: any, index: number) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <input type="text" className="flex-1 p-3 border-2 border-gray-200 rounded-xl font-bold text-black" defaultValue={item.name} />
-                      <div className="relative">
-                        <span className="absolute left-2 top-3 text-gray-500 font-bold">¥</span>
-                        <input type="number" className="w-28 p-3 pl-6 border-2 border-gray-200 rounded-xl font-bold text-right text-black" defaultValue={item.price} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 合計金額 */}
-              <div className="border-t-4 border-gray-100 pt-6 flex justify-between items-center">
-                <span className="text-xl font-black text-gray-700">合計金額</span>
-                <div className="text-3xl font-black text-blue-700">
-                  <span className="mr-1">¥</span>
-                  <input type="number" className="w-36 text-right border-b-4 border-blue-700 outline-none" defaultValue={result.total} />
-                </div>
-              </div>
-
-              {/* 保存ボタン */}
-              <button 
-                onClick={() => alert('保存処理（バックエンド送信）は次のステップで実装しましょう！')}
-                className="w-full bg-green-600 hover:bg-green-700 text-white text-xl font-black py-4 rounded-2xl shadow-lg transition-transform active:scale-95"
-              >
-                この内容で一括保存
-              </button>
-            </div>
-          </div>
+          <EditModal
+            isOpen={isModalOpen}
+            data={result}
+            isSaving={saving}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+            onUpdate={setResult}
+          />
         )}
       </div>
     </div>

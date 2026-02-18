@@ -11,6 +11,7 @@ import type { AnalyzeResponse, AIAnalyzeResponse } from '@/lib/types/analyze';
 import { ExpenseInputModal } from "./_components/ExpenseInputModal";
 import { HistoryModal } from "./_components/HistoryModal";
 import { BudgetSettingModal } from "./_components/BudgetSettingModal";
+import Link from 'next/link';
 
 
 export default function HomePage() {
@@ -200,7 +201,9 @@ export default function HomePage() {
               <span className="text-[#eb6b15] text-[24px]">+</span>
               <span className="text-[#eb6b15] text-[14px] font-bold">手入力</span>
             </button>
-            <button className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
+            <button 
+            onClick={() => router.push('/receipt')}
+            className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors">
               <span className="text-[#eb6b15] text-[24px]">📄</span>
               <span className="text-[#eb6b15] text-[14px] font-bold">レシート読込</span>
             </button>
