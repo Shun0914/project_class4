@@ -8,6 +8,7 @@ from app.routers import analyze
 from app.routers import auth
 from app.routers import budget
 from app.routers.expense import router as expense_router
+from app.routers import nearShops
 
 from app.models.user import User
 from app.models.expense import Expense
@@ -18,12 +19,30 @@ from app.models.detection_history import DetectionHistory
 from app.models.receipt_image import ReceiptImage
 from app.models.keyword import Keyword
 
+# Google map 問合せ用
+from app.core.client import HttpClientHolder, cms
+from contextlib import asynccontextmanager
+import httpx
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # アプリ起動時の処理: クライアントを作成（コネクションプール開始）
+    cms.client = httpx.AsyncClient(
+        timeout=10.0,
+        limits=httpx.Limits(max_connections=50, max_keepalive_connections=100)
+    )
+    yield
+    # アプリ終了時の処理: クライアントを閉じる
+    if cms.client:
+        await cms.client.aclose()
+
+
 
 app = FastAPI(
     title="おかねのコーチ API",
     description="AIコーチ付き家計簿アプリ おかねのコーチ のAPI",
-    version="0.1.0"
-)
+    version="0.1.0",
+    lifespan=lifespan)
 
 # CORS設定（フロントエンドからのリクエストを許可）
 app.add_middleware(
@@ -42,6 +61,7 @@ app.include_router(auth.router)
 app.include_router(analyze.router)
 app.include_router(budget.router)
 app.include_router(expense_router, prefix="/expenses")
+app.include_router(nearShops.router)
 
 @app.get("/")
 def read_root():
