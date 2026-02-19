@@ -56,11 +56,35 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
         <div className="flex-1 overflow-y-auto px-[16px] py-[24px] flex flex-col gap-[20px]">
           <h3 className="font-bold text-[16px] text-[#2a3449]">今月の分析</h3>
           {aiAnalysis ? (
-            <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] max-h-[400px] overflow-y-auto prose prose-sm max-w-none">
-              <ReactMarkdown>
-                {aiAnalysis}
-              </ReactMarkdown>
-            </div>
+            <>
+              <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] max-h-[400px] overflow-y-auto prose prose-sm max-w-none">
+                <ReactMarkdown>
+                  {aiAnalysis}
+                </ReactMarkdown>
+              </div>
+              <button
+                onClick={handleStartAnalysis}
+                disabled={isAnalyzing}
+                className="w-full flex items-center justify-center gap-[8px] py-[14px] rounded-[8px] font-bold text-[16px] transition-colors border border-[#eb6b15] bg-white text-[#eb6b15] hover:bg-[#fff5f0] disabled:bg-[#9ca3af] disabled:text-white disabled:cursor-not-allowed disabled:border-[#9ca3af]"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="size-[20px] border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    再分析する
+                  </>
+                ) : (
+                  <>
+                    <Image
+                      src={coachMode === 'angel' ? '/angel.svg' : '/demon.svg'}
+                      alt={coachMode === 'angel' ? '天使' : '鬼'}
+                      width={16}
+                      height={16}
+                    />
+                    再分析する
+                  </>
+                )}
+              </button>
+            </>
           ) : isAnalyzing ? (
             <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] min-h-[200px] flex items-center justify-center">
               <div className="animate-spin size-[40px] border-4 border-[#eb6b15] border-t-transparent rounded-full" />
