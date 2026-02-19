@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import BottomNav from '@/lib/components/BottomNav';
 import { get } from '@/lib/api/client';
-import type { AnalyzeResponse, AIAnalyzeResponse } from '@/lib/types/analyze';
+import type { AnalyzeResponse } from '@/lib/types/analyze';
 import { ExpenseInputModal } from "./_components/ExpenseInputModal";
 import { HistoryModal } from "./_components/HistoryModal";
 import { BudgetSettingModal } from "./_components/BudgetSettingModal";
+import { AICoachModal } from "./_components/AICoachModal";
 
 
 export default function HomePage() {
@@ -18,8 +18,6 @@ export default function HomePage() {
   const router = useRouter();
   const [data, setData] = useState<AnalyzeResponse | null>(null);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
@@ -54,28 +52,6 @@ export default function HomePage() {
     return null;
   }
 
-  const handleAICoachClick = () => {
-    setIsAIModalOpen(true);
-  };
-
-  const handleStartAnalysis = async () => {
-    if (user?.nickname) {
-      setIsAnalyzing(true);
-      try {
-        const response = await get<AIAnalyzeResponse>(`/api/ai-analyze`);
-        setAiAnalysis(response.ai_message);
-      } catch (error) {
-        console.error('AI分析エラー:', error);
-        if (error instanceof Error && error.message.includes('予算が設定されていません')) {
-          setAiAnalysis('予算が設定されていません。先に予算を設定してください。');
-        } else {
-          setAiAnalysis('AI分析の取得に失敗しました。');
-        }
-      } finally {
-        setIsAnalyzing(false);
-      }
-    }
-  };
 
   const today = new Date();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -201,7 +177,7 @@ export default function HomePage() {
               <span className="text-[#eb6b15] text-[14px] font-bold whitespace-nowrap">レシート読込</span>
             </button>
             <button 
-              onClick={handleAICoachClick}
+              onClick={() => setIsAIModalOpen(true)}
               className="bg-white border border-[#f68c44] rounded-[16px] px-[12px] py-[12px] flex flex-col items-center gap-[4px] hover:bg-[#fff5f0] transition-colors shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]"
             >
               <span className="text-[#eb6b15] text-[24px]">📊</span>
@@ -232,58 +208,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* AI Coach Modal */}
-      {isAIModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div 
-            className="absolute inset-0 bg-black/40" 
-            onClick={() => setIsAIModalOpen(false)}
-          />
-          <div className="relative bg-white rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden">
-            <div className="flex items-center justify-center px-[16px] py-[20px] w-full border-b border-[#e2e9f2] relative">
-              <h2 className="font-bold text-[#2a3449] text-[20px]">AIコーチ分析</h2>
-              <button
-                onClick={() => setIsAIModalOpen(false)}
-                className="absolute right-[16px] flex items-center justify-center size-[40px] rounded-full hover:bg-gray-200/50 transition-colors"
-              >
-                <span className="text-[#7C7A78] text-[24px]">×</span>
-              </button>
-            </div>
-            <div className="px-[16px] py-[24px] flex flex-col gap-[20px]">
-              <h3 className="font-bold text-[16px] text-[#2a3449]">今月の分析</h3>
-              {aiAnalysis ? (
-                <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] max-h-[400px] overflow-y-auto prose prose-sm max-w-none">
-                  <ReactMarkdown>
-                    {aiAnalysis}
-                  </ReactMarkdown>
-                </div>
-              ) : isAnalyzing ? (
-                <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] min-h-[200px] flex items-center justify-center">
-                  <div className="animate-spin size-[40px] border-4 border-[#eb6b15] border-t-transparent rounded-full" />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-[16px]">
-                  <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] min-h-[120px] flex items-center justify-center w-full">
-                    <p className="text-[16px] text-[#6a7282] text-center">分析開始ボタンを押してください</p>
-                  </div>
-                  <button
-                    onClick={handleStartAnalysis}
-                    className="w-full bg-gradient-to-r from-[#f5a047] to-[#f7b563] text-white py-[14px] rounded-[8px] font-bold text-[16px] hover:from-[#e08f36] hover:to-[#e6a552] transition-colors flex items-center justify-center gap-[8px]"
-                  >
-                    <Image
-                      src={data.coach_mode === 'angel' ? '/angel.svg' : '/demon.svg'}
-                      alt={data.coach_mode === 'angel' ? '天使' : '鬼'}
-                      width={24}
-                      height={24}
-                    />
-                    分析開始
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* AIコーチモーダル */}
+      <AICoachModal
+        open={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        coachMode={data.coach_mode as 'angel' | 'demon'}
+      />
       
       {/* 内訳モーダル */}
       <HistoryModal

@@ -38,7 +38,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6">
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pb-6">
       <div className="bg-[rgba(255,255,255,0.9)] mx-4 rounded-[40px] p-[8px] w-full max-w-[390px]">
         <div className="flex items-center">
           {tabs.map((tab) => {
