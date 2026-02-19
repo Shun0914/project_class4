@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     # アプリ起動時の処理: クライアントを作成（コネクションプール開始）
     cms.client = httpx.AsyncClient(
         timeout=10.0,
-        limits=httpx.Limits(max_connections=50, max_keepalive_connections=100)
+        limits=httpx.Limits(),
     )
     yield
     # アプリ終了時の処理: クライアントを閉じる

@@ -1,5 +1,5 @@
 # app/routers/nearShops.py
-# 最寄りのショップ情報取得
+# 最寄りのショップ情報取得（Yahoo!ローカルサーチAPI版）
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
@@ -9,8 +9,14 @@ from app.core.client import cms
 
 router = APIRouter(tags=["支出"])
 
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
-PLACES_NEARBY_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+# Yahoo!ローカルサーチAPI（YOLP）
+# Doc: https://developer.yahoo.co.jp/webapi/map/openlocalplatform/v1/localsearch.html
+YAHOO_APP_ID = os.getenv("YAHOO_APP_ID")  # = Client ID（アプリケーションID）
+YAHOO_LOCAL_SEARCH_URL = "https://map.yahooapis.jp/search/local/V1/localSearch"
+
+# 電話帳カセット（全国の店舗を網羅したデータ）
+# Doc内に明記されている固定値
+PHONEBOOK_CID = "d8a23e9e64a4c817227ab09858bc1330"
 
 # ==========
 # Request / Response schema
@@ -20,6 +26,7 @@ def get_http_client():
     if cms.client is None:
         raise RuntimeError("HTTP client is not initialized")
     return cms.client
+
 
 class NearShopsRequest(BaseModel):
     """現在地（緯度・経度）"""
@@ -39,71 +46,95 @@ class PlaceSummary(BaseModel):
     lng: float | None = None
 
 
+def _parse_lon_lat(coords: str | None) -> tuple[float | None, float | None]:
+    """YOLPのCoordinates（'lon,lat'）をfloatへ"""
+    if not coords or "," not in coords:
+        return None, None
+    lon_s, lat_s = coords.split(",", 1)
+    try:
+        return float(lon_s), float(lat_s)
+    except ValueError:
+        return None, None
+
+
 @router.post("/nearShops", response_model=list[PlaceSummary])
 async def get_near_shops(
     req: NearShopsRequest,
-    client: httpx.AsyncClient = Depends(get_http_client)):
+    n: int = 3,
+    client: httpx.AsyncClient = Depends(get_http_client),
+):
     """
-    現在地(lat/lng)から最寄りの商業施設をX件返す。
-    Places API Nearby Search を rankby=distance で呼び出す。
+    現在地(lat/lng)から最寄りの商業施設を返す（Yahoo!ローカルサーチAPI）。
+    - sort=geo（球面三角法による距離順）
     """
-    if not GOOGLE_MAPS_API_KEY:
+    if not YAHOO_APP_ID:
         # 環境変数が無いケースはサーバー設定不備なので 500
-        raise HTTPException(status_code=500, detail="GOOGLE_MAPS_API_KEY is not set")
+        raise HTTPException(status_code=500, detail="YAHOO_APP_ID is not set")
+
 
     params = {
-        "key": GOOGLE_MAPS_API_KEY,
-        "location": f"{req.lat},{req.lng}",
-        "rankby": "distance",     # 距離順
-        # "keyword": ( # 検索キーワードを指定
-        #     "restaurant OR convenience_store OR supermarket OR shop OR "
-        #     "drugstore OR cafe OR shopping_mall OR department_store OR "
-        #     "clothing_store OR jewelry_store OR beauty_salon OR hair_carer OR "
-        #     "bakery OR fast_food"
-        #    ),
-        "language": "ja",
+        "appid": YAHOO_APP_ID,
+        "cid": PHONEBOOK_CID,   # 電話帳カセット（広く商業施設を拾いやすい）
+        "lat": round(req.lat, 4),
+        "lon": round(req.lng, 4),
+        "dist": 1,              # 検索半径（km）※必要なら調整
+        "sort": "geo",          # 距離順（球面三角法）
+        "results": n,           # 最寄り n件
+        "output": "json",
+        "detail": "standard",
+        "group": "gid",         # 同一店舗の名寄せ
+        "distinct": "true",
     }
 
     try:
-        res = await client.get(PLACES_NEARBY_URL, params=params)
+        res = await client.get(YAHOO_LOCAL_SEARCH_URL, params=params)
     except httpx.RequestError as e:
-        # 外部APIへの通信問題
-        raise HTTPException(status_code=502, detail=f"Places API network error: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Yahoo Local Search network error: {str(e)}")
 
     if res.status_code != 200:
-        raise HTTPException(status_code=502, detail=f"Places API request failed: {res.status_code}")
+        raise HTTPException(status_code=502, detail=f"Yahoo Local Search request failed: {res.status_code}")
 
     data = res.json()
 
-    status_ = data.get("status")
-    if status_ not in ("OK", "ZERO_RESULTS"):
-        # 例：REQUEST_DENIED / INVALID_REQUEST / OVER_QUERY_LIMIT
+    # 正常時は ResultInfo.Status=200（エラー時は別コード）
+    result_info = (data.get("ResultInfo") or {})
+    status_code = result_info.get("Status")
+    if status_code not in (200, "200"):
         raise HTTPException(
             status_code=400,
             detail={
-                "status": status_,
+                "status": status_code,
+                "description": result_info.get("Description"),
                 "error_message": "400 Error: Shops cannot get from api.",
             },
         )
 
-    results = data.get("results", [])
-    topX = results[:3]
-
+    features = data.get("Feature") or []
     out: list[PlaceSummary] = []
-    for p in topX:
-        loc = (p.get("geometry") or {}).get("location") or {}
-        opening_hours = p.get("opening_hours") or {}
+
+    for f in features[:n]:
+        name = f.get("Name") or ""
+        # place_id 相当：名寄せID(Gid)があれば優先、なければId
+        place_id = f.get("Gid") or f.get("Id") or ""
+        coords = (f.get("Geometry") or {}).get("Coordinates")
+        lon, lat = _parse_lon_lat(coords)
+        prop = f.get("Property") or {}
+        address = prop.get("Address")
+
+        # rating / review count 等はカセットによって無い場合があるため、あれば拾う
+        rating = prop.get("Rating")
+        review_count = prop.get("ReviewCount")
 
         out.append(
             PlaceSummary(
-                name=p.get("name", ""),
-                place_id=p.get("place_id", ""),
-                vicinity=p.get("vicinity"),
-                rating=p.get("rating"),
-                user_ratings_total=p.get("user_ratings_total"),
-                open_now=opening_hours.get("open_now"),
-                lat=loc.get("lat"),
-                lng=loc.get("lng"),
+                name=name,
+                place_id=str(place_id),
+                vicinity=address,
+                rating=float(rating) if rating is not None else None,
+                user_ratings_total=int(review_count) if review_count is not None else None,
+                open_now=None,  # YOLPのローカルサーチAPIは open_now 相当が常にあるわけではない
+                lat=lat,
+                lng=lon,  # 注意：YOLPはlon,lat（Googleはlat,lng）
             )
         )
 
