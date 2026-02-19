@@ -120,7 +120,7 @@ export default function HomePage() {
             )} */}
 
             {/* Budget Details with Angel/Demon Icon */}
-            <div className="flex items-start gap-[16px]">
+            <div className="flex items-center gap-[16px]">
               {/* Angel/Demon Image */}
               <div className="shrink-0 w-[80px] h-[80px] flex items-center justify-center">
                 <Image
