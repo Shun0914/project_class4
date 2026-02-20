@@ -52,8 +52,8 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     return `${year}年${month}月${day}日 (${weekDay})`;
   };
 
-    // 追加：位置情報 → /api/nearShops(POST) → name最大3件
-  const fetchNearShops = async () => {
+  // 位置情報 → /api/nearShops(POST) → name最大3件
+  const fetchNearShops = async (isActive: () => boolean) => {
     try {
       // 位置情報（必須）
       const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -90,9 +90,11 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
         .filter((name) => name.length > 0)
         .slice(0, 3);
 
+      if (!isActive()) return; // モーダルが閉じた後の反映を防ぐ
       setNearShopNames(names);
     } catch {
       // 取得中/エラー時は「何も出さない」方針なので握りつぶす
+      if (!isActive()) return;
       setNearShopNames([]);
     }
   };
@@ -105,7 +107,11 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       setCategoryId(1);
       setSaving(false);
       setSnack(null);
-      fetchNearShops();      
+      const active = { current: true };
+      fetchNearShops(() => active.current);
+      return () => {
+        active.current = false;
+      };
     } else {
       setNearShopNames([]);
     } 
