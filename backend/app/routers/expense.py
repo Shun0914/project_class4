@@ -18,7 +18,7 @@ from app.models.user import User
 from app.models.expense import Expense
 from app.models.category import Category
 from app.core.security import get_current_user
-from app.schemas.expense import ExpenseCreateRequest
+from app.schemas.expense import ExpenseCreateRequest, ExpenseUpdateRequest
 
 
 router = APIRouter()
@@ -193,3 +193,69 @@ def register_expense(
     except Exception as e:
         traceback.print_exc()
         return _error_response(status.HTTP_500_INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", f"Debug: {str(e)}")
+
+
+@router.put("/{expense_id}")
+def update_expense(
+    expense_id: int,
+    payload: ExpenseUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """支出を更新する"""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="支出が見つかりません",
+        )
+    if expense.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="この支出を編集する権限がありません",
+        )
+
+    expense.item = payload.item
+    expense.category_id = payload.category_id
+    expense.price = payload.price
+    expense.expense_date = payload.expense_date
+    db.commit()
+    db.refresh(expense)
+
+    category_name = None
+    if expense.category_id:
+        cat = db.query(Category).filter(Category.id == expense.category_id).first()
+        if cat:
+            category_name = cat.name
+
+    return {
+        "id": expense.id,
+        "item": expense.item,
+        "price": expense.price,
+        "expense_date": expense.expense_date.isoformat(),
+        "category_id": expense.category_id,
+        "category_name": category_name,
+        "created_at": expense.created_at.isoformat() if expense.created_at else None,
+    }
+
+
+@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """支出を削除する"""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="支出が見つかりません",
+        )
+    if expense.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="この支出を削除する権限がありません",
+        )
+    db.delete(expense)
+    db.commit()

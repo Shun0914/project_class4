@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, ChevronDown } from "lucide-react";
-import { createExpense } from '@/lib/api/expenses';
+import { createExpense, updateExpense, deleteExpense, type ExpenseItem } from '@/lib/api/expenses';
 import { Snackbar } from './Snackbar';
 import { DateCalendarPicker } from '../../components/DateCalendarPicker';
 
@@ -20,9 +20,10 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  editingExpense?: ExpenseItem | null;
 };
 
-export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
+export function ExpenseInputModal({ open, onClose, onSuccess, editingExpense }: Props) {
   // 日付の状態を Date オブジェクトで管理
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -44,14 +45,22 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
 
   useEffect(() => {
     if (open) {
-      setDate(new Date());
-      setItem('');
-      setPrice('');
-      setCategoryId(1);
+      if (editingExpense) {
+        const d = new Date(editingExpense.expense_date + "T00:00:00");
+        setDate(d);
+        setItem(editingExpense.item);
+        setPrice(String(editingExpense.price));
+        setCategoryId(editingExpense.category_id ?? 1);
+      } else {
+        setDate(new Date());
+        setItem('');
+        setPrice('');
+        setCategoryId(1);
+      }
       setSaving(false);
       setSnack(null);
     }
-  }, [open]);
+  }, [open, editingExpense]);
 
   const handleSave = async () => {
     if (!item || !price) {
@@ -66,17 +75,36 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       const m = String(date.getMonth() + 1).padStart(2, '0');
       const d = String(date.getDate()).padStart(2, '0');
 
-      await createExpense({
+      const payload = {
         item,
         price: Number(price),
         expense_date: `${y}-${m}-${d}`,
         category_id: categoryId,
-      });
-      setSnack({ kind: 'success', message: '登録完了' });
+      };
+
+      if (editingExpense) {
+        await updateExpense(editingExpense.id, payload);
+      } else {
+        await createExpense(payload);
+      }
       onSuccess?.();
-      setTimeout(onClose, 1500);
+      onClose();
     } catch (e) {
       setSnack({ kind: 'error', message: '保存に失敗しました' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingExpense) return;
+    setSaving(true);
+    try {
+      await deleteExpense(editingExpense.id);
+      onSuccess?.();
+      onClose();
+    } catch (e) {
+      setSnack({ kind: 'error', message: '削除に失敗しました' });
     } finally {
       setSaving(false);
     }
@@ -108,7 +136,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
             {/* ヘッダー (Figma仕様) */}
             <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] shrink-0">
               <div className="w-[40px]" /> {/* バランス調整用 */}
-              <h2 className="font-bold text-[#2a3449] text-[20px]">入力</h2>
+              <h2 className="font-bold text-[#2a3449] text-[20px]">{editingExpense ? '編集' : '入力'}</h2>
               <button onClick={onClose} className="flex items-center justify-center size-[40px] rounded-full hover:bg-gray-100 transition-colors">
                 <X className="size-[24px] text-[#7C7A78]" />
               </button>
@@ -185,14 +213,23 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
               </div>
             </div>
 
-            {/* 保存ボタン */}
-            <div className="px-[16px] py-[16px] border-t border-[#e2e9f2] shrink-0">
-              <button 
-                onClick={handleSave} 
+            {/* 削除・保存ボタン */}
+            <div className="px-[16px] py-[16px] border-t border-[#e2e9f2] shrink-0 space-y-3">
+              {editingExpense && (
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="w-full bg-white text-[#f13434] font-bold py-[16px] rounded-[8px] border border-[#f13434] hover:bg-red-50 disabled:opacity-50 transition-colors text-[16px]"
+                >
+                  削除する
+                </button>
+              )}
+              <button
+                onClick={handleSave}
                 disabled={saving}
                 className="w-full bg-[#eb6b15] text-white font-bold py-[16px] rounded-[8px] hover:bg-[#d15a0a] disabled:opacity-50 transition-colors text-[16px]"
               >
-                {saving ? '保存中...' : '保存する'}
+                {saving ? '保存中...' : editingExpense ? '更新する' : '保存する'}
               </button>
             </div>
           </motion.div>
