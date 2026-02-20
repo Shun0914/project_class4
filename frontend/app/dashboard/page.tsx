@@ -176,9 +176,9 @@ export default function DashboardPage() {
 
       {/* 4. AIコーチ分析モーダル: ユーザー設定（天使/鬼）を優先反映 */}
       <AICoachModal 
-        isOpen={isAIModalOpen} 
+        open={isAIModalOpen} 
         onClose={() => setIsAIModalOpen(false)} 
-        coachMode={user?.coach_mode || summaryData?.coach_mode || 'demon'}
+        coachMode={(user?.coach_mode === 'devil' ? 'demon' : user?.coach_mode) || 'demon'}
       />
 
       {/* 浮遊アクションボタン (FAB): 支出登録ショートカット */}
