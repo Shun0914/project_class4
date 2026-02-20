@@ -45,6 +45,27 @@ app.include_router(budget.router)
 app.include_router(expense_router, prefix="/expenses")
 app.include_router(receipt.router)
 
+# --- (たも）ここから追加：サーバー起動時に自動でカテゴリーを用意する仕組み ---
+@app.on_event("startup")
+def startup_event():
+    try:
+        # MySQLの機能「INSERT IGNORE」を使って、すでにデータがあれば何もしない、無ければ入れる
+        sql = text("""
+            INSERT IGNORE INTO categories (id, name) 
+            VALUES 
+            (1, '未分類'),  # ←★ 1番を「未分類」にしておく！
+            (2, '食費'), 
+            (3, '日用品'), 
+            (4, '交通費'), 
+            (5, 'その他')
+        """)
+        with engine.begin() as conn:
+            conn.execute(sql)
+        print("✅ 起動チェック: カテゴリーデータの準備OK！")
+    except Exception as e:
+        print(f"⚠️ カテゴリーデータの準備をスキップしました (詳細: {e})")
+# --- （たも）ここまで追加 ---
+
 @app.get("/")
 def read_root():
     """APIの稼働状況を確認するエンドポイント"""
