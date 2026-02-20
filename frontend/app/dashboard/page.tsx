@@ -16,6 +16,7 @@ import { HistoryModal } from '@/app/_components/HistoryModal';
 import { ExpenseInputModal } from '@/app/_components/ExpenseInputModal';
 import { AICoachModal } from '@/app/_components/AICoachModal';
 
+
 /**
  * ダッシュボードページ
  * 収支のサマリー表示、月次切り替え、各種設定/登録モーダルの管理を行います。
@@ -88,8 +89,22 @@ export default function DashboardPage() {
         <MonthSelector 
           year={viewYear} 
           month={viewMonth}
-          onPrevMonth={() => setViewMonth(m => m === 1 ? 12 : m - 1)}
-          onNextMonth={() => setViewMonth(m => m === 12 ? 1 : m + 1)}
+          onPrevMonth={() => {
+            if (viewMonth === 1) {
+              setViewYear(prev => prev - 1); // 1月なら前年の12月へ
+              setViewMonth(12);
+            } else {
+              setViewMonth(prev => prev - 1);
+            }
+          }}
+          onNextMonth={() => {
+            if (viewMonth === 12) {
+              setViewYear(prev => prev + 1); // 12月なら翌年の1月へ
+              setViewMonth(1);
+            } else {
+              setViewMonth(prev => prev + 1);
+            }
+          }}
         />
       </div>
 
@@ -99,6 +114,8 @@ export default function DashboardPage() {
           
           {/* 予算状況サマリーカード */}
           <BudgetSummaryCard
+            year={viewYear}   
+            month={viewMonth} 
             budget={summaryData?.total_budget}
             spent={summaryData?.total_spent}
             remaining={summaryData?.remaining_amount}
@@ -106,6 +123,7 @@ export default function DashboardPage() {
             status={summaryData?.status}
             onSettingsClick={() => setIsBudgetOpen(true)}
             onAnalyzeClick={() => setIsAIModalOpen(true)}
+            coachMode={user?.coach_mode || summaryData?.coach_mode || 'demon'}
           />
 
           {/* カテゴリ別の支出内訳リスト */}
@@ -117,11 +135,12 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* 週次レポート（今後の拡張用エリア） */}
-          <div className="p-4 bg-white/60 rounded-2xl border border-white">
+          {/* 週次レポートエリアは未実装のためコメントアウト */}
+          {/* <div className="p-4 bg-white/60 rounded-2xl border border-white">
             <p className="text-xs text-gray-400">1週間のレポート</p>
             <p className="text-sm font-bold mt-1">直近のレポートを表示 ＞</p>
           </div>
+          */}
         </div>
       </div>
 
