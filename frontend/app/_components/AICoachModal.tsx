@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { get } from '@/lib/api/client';
 import type { AIAnalyzeResponse } from '@/lib/types/analyze';
@@ -41,15 +42,26 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div 
-        className="absolute inset-0 bg-black/40" 
-        onClick={onClose}
-      />
-      <div className="relative bg-[#fffdf2] rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]">
+    <AnimatePresence>
+      {open && (
+        <div key="aicoach-modal-root" className="fixed inset-0 z-50 flex items-end justify-center">
+          <motion.div
+            key="aicoach-overlay"
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            key="aicoach-content"
+            className="relative bg-[#fffdf2] rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          >
         <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] bg-white shrink-0">
           <div className="w-[40px]" />
           <h2 className="font-bold text-[#2a3449] text-[20px]">AIコーチ分析</h2>
@@ -116,7 +128,9 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
