@@ -18,6 +18,10 @@ YAHOO_LOCAL_SEARCH_URL = "https://map.yahooapis.jp/search/local/V1/localSearch"
 # Doc内に明記されている固定値
 PHONEBOOK_CID = "d8a23e9e64a4c817227ab09858bc1330"
 
+# デモ用座標（Tech0事務所）
+DEMO_LAT = 35.6812
+DEMO_LNG = 139.7671
+
 # ==========
 # Request / Response schema
 # ==========
@@ -65,18 +69,25 @@ async def get_near_shops(
 ):
     """
     現在地(lat/lng)から最寄りの商業施設を返す（Yahoo!ローカルサーチAPI）。
-    - sort=geo（球面三角法による距離順）
+    環境変数 IS_DEMO が 'true' または '1' の場合は固定の座標を使用する。
     """
     if not YAHOO_APP_ID:
         # 環境変数が無いケースはサーバー設定不備なので 500
         raise HTTPException(status_code=500, detail="YAHOO_APP_ID is not set")
 
+    is_demo = os.getenv("DEMO_FLAG", "false").lower() in ("true", "1")
+    if is_demo:
+        target_lat = DEMO_LAT
+        target_lng = DEMO_LNG
+    else:
+        target_lat = req.lat
+        target_lng = req.lng
 
     params = {
         "appid": YAHOO_APP_ID,
         "cid": PHONEBOOK_CID,   # 電話帳カセット（広く商業施設を拾いやすい）
-        "lat": round(req.lat, 4),
-        "lon": round(req.lng, 4),
+        "lat": round(target_lat, 4),
+        "lon": round(target_lng, 4),
         "dist": 1,              # 検索半径（km）※必要なら調整
         "sort": "geo",          # 距離順（球面三角法）
         "results": n,           # 最寄り n件
