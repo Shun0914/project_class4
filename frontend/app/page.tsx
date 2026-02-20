@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -32,13 +32,17 @@ export default function HomePage() {
     }
   }, [isLoading, user, router]);
 
-  useEffect(() => {
+  const fetchAnalyze = useCallback(() => {
     if (user?.nickname) {
       get<AnalyzeResponse>(`/api/analyze`)
         .then(setData)
         .catch(console.error);
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchAnalyze();
+  }, [fetchAnalyze]);
 
   if (isLoading) {
     return (
@@ -228,18 +232,17 @@ export default function HomePage() {
         open={isBudgetOpen}
         onClose={() => setIsBudgetOpen(false)}
         currentBudget={data.budget}
-        onSuccess={() => {
-          get<AnalyzeResponse>('/api/analyze')
-            .then(setData)
-            .catch(console.error);
-        }}
+        onSuccess={fetchAnalyze}
       />
 
       {/* ★ 手入力モーダル（内訳モーダルより上に表示されるよう z-[70]） */}
       <ExpenseInputModal
         open={isInputOpen}
         onClose={() => setIsInputOpen(false)}
-        onSuccess={() => setHistoryRefreshKey(k => k + 1)}
+        onSuccess={() => {
+          setHistoryRefreshKey(k => k + 1);
+          fetchAnalyze();
+        }}
       />
 
       {/* フローティングボタン*/}
