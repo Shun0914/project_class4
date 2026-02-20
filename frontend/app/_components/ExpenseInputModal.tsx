@@ -1,3 +1,5 @@
+// frontend/app/_components/ExpenseInputModal.tsx
+
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -22,6 +24,11 @@ type Props = {
   onSuccess?: () => void;
 };
 
+type NearShop = {
+  name?: string;
+  // 他のフィールドが来てもOK（この画面では使わない）
+};
+
 export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   // 日付の状態を Date オブジェクトで管理
   const [date, setDate] = useState(new Date());
@@ -31,6 +38,9 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const [categoryId, setCategoryId] = useState(1);
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
+
+  // 近くにある店舗名
+  const [nearShopNames, setNearShopNames] = useState<string[]>([]);
 
   // 表示用の日付フォーマット (Figma再現)
   const formatDateForDisplay = (d: Date) => {
@@ -42,6 +52,51 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     return `${year}年${month}月${day}日 (${weekDay})`;
   };
 
+    // 追加：位置情報 → /api/nearShops(POST) → name最大3件
+  const fetchNearShops = async () => {
+    try {
+      // 位置情報（必須）
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('geolocation unavailable'));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 0,
+        });
+      });
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // token（必須ではないが付ける）
+      const token = localStorage.getItem('access_token');
+
+      // 例の流儀に合わせて Next.js Route Handler に投げる
+      const res = await fetch('/api/nearShops', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ lat, lng }),
+      });
+
+      if (!res.ok) return;
+
+      const data: NearShop[] = await res.json();
+
+      const names = (Array.isArray(data) ? data : [])
+        .map((x) => (x?.name ?? '').trim())
+        .filter((name) => name.length > 0)
+        .slice(0, 3);
+
+      setNearShopNames(names);
+    } catch {
+      // 取得中/エラー時は「何も出さない」方針なので握りつぶす
+      setNearShopNames([]);
+    }
+  };
+
   useEffect(() => {
     if (open) {
       setDate(new Date());
@@ -50,7 +105,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       setCategoryId(1);
       setSaving(false);
       setSnack(null);
-    }
+      fetchNearShops();      
+    } else {
+      setNearShopNames([]);
+    } 
   }, [open]);
 
   const handleSave = async () => {
@@ -97,7 +155,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
             onClick={onClose}
           />
 
-          <motion.div 
+          <motion.div
             key="modal-content"
             className="relative bg-white rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]"
             initial={{ y: "100%" }} 
@@ -128,17 +186,48 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                 </button>
               </div>
 
-              {/* 商品名 */}
+              {/* 品目 */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[16px] text-[#2a3449]">商品名</label>
-                <input 
+                <label className="font-bold text-[16px] text-[#2a3449]">品目</label>
+
+                <input
                   name="purchase_item"
-                  value={item} 
-                  onChange={e => setItem(e.target.value)}
-                  className="w-full px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]" 
-                  placeholder="例）コーヒー"
+                  value={item}
+                  onChange={(e) => setItem(e.target.value)}
+                  className="w-full px-[8px] py-[8px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]"
                 />
-              </div>
+
+                <div className="flex justify-end gap-[8px]">
+                  {["食料品", "カフェ", "コンビニ"].map((label) => (
+      <button
+        key={label}
+        type="button"
+        onClick={() => setItem(label)}
+        className="w-[72px] py-[6px] border-none rounded-[8px] text-[14px] text-[#606972] bg-[#faeae8] hover:bg-[#f1d8d3]"
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+
+  {/* 下段：API取得ボタン（最大3・縦並び・右揃え・0件なら表示しない） */}
+  {nearShopNames.length > 0 && (
+    <div className="flex flex-col items-end gap-[8px]">
+      {nearShopNames.map((name) => (
+        <button
+          key={name}
+          type="button"
+          onClick={() => setItem(name)}
+          className="w-auto max-w-full px-[10px] py-[6px] border border-[#e2e9f2] rounded-[8px] text-[14px] text-[#2a3449] hover:bg-gray-50"
+          title={name}
+        >
+          {name}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
 
               {/* 金額 */}
               <div className="flex flex-col gap-[8px]">

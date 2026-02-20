@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-import os
+import os, re
 import httpx
 from app.core.client import cms
 
@@ -113,7 +113,8 @@ async def get_near_shops(
     out: list[PlaceSummary] = []
 
     for f in features[:n]:
-        name = f.get("Name") or ""
+        raw_name = f.get("Name") or ""
+        name = re.split(r'[ 　]', raw_name)[0] # 名前の最初のブロックだけ
         # place_id 相当：名寄せID(Gid)があれば優先、なければId
         place_id = f.get("Gid") or f.get("Id") or ""
         coords = (f.get("Geometry") or {}).get("Coordinates")
