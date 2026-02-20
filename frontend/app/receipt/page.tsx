@@ -42,11 +42,14 @@ export default function ReceiptPage() {
         body: formData,
       });
 
+      // バックエンドから直接データが返ってくる想定でシンプルに受け取る
       if (!response.ok) throw new Error('解析失敗');
 
-      // バックエンドから直接データが返ってくる想定でシンプルに受け取る
-      const data: AnalysisResult = await response.json();
-      setResult(data);
+      // バックエンドから返ってきた箱全体をいったん受け取る
+      const responseData = await response.json();
+      
+      // 箱の中身（.data）だけを取り出してセットする
+      setResult(responseData.data);
       setIsModalOpen(true);
     } catch (error) {
       console.error(error);
