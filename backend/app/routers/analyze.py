@@ -1,13 +1,14 @@
 """分析API"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case
 from datetime import date, timedelta
 from calendar import monthrange
 from app.db import get_db
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.budget import Budget
+from app.models.category import Category
 from app.schemas.analyze import AnalyzeResponse, WeeklyReport, AIAnalyzeResponse
 from app.core.security import get_current_user
 from openai import AzureOpenAI
@@ -325,8 +326,8 @@ def ai_analyze(
     if budget is None:
         raise HTTPException(status_code=400, detail="予算が設定されていません")
     
-    ai_message = _generate_ai_analysis(coach, total, budget)
-    
+    ai_message = _generate_ai_analysis(coach, total, budget, current_user.id, db)
+
     return AIAnalyzeResponse(
         user=current_user.username,
         total=total,
@@ -336,29 +337,72 @@ def ai_analyze(
     )
 
 
-def _generate_ai_analysis(coach: str, total: int, budget: int) -> str:
+def _generate_ai_analysis(coach: str, total: int, budget: int, user_id: int, db: Session) -> str:
     """OpenAI APIによるAI分析"""
-    
+    today = date.today()
+    month_start = today.replace(day=1)
+    days_in_month = monthrange(today.year, today.month)[1]
+    month_end = today.replace(day=days_in_month)
+
+    # カテゴリ別支出を取得
+    category_data = db.query(
+        case(
+            (Category.name.isnot(None), Category.name),
+            else_="未分類"
+        ).label("category_name"),
+        func.sum(Expense.price).label("category_total")
+    ).outerjoin(Category, Expense.category_id == Category.id).filter(
+        Expense.user_id == user_id,
+        Expense.expense_date >= month_start,
+        Expense.expense_date <= month_end
+    ).group_by(Category.name).order_by(func.sum(Expense.price).desc()).all()
+
+    # 対象月の支出履歴をすべて取得
+    recent_expenses = db.query(Expense).outerjoin(
+        Category, Expense.category_id == Category.id
+    ).filter(
+        Expense.user_id == user_id,
+        Expense.expense_date >= month_start,
+        Expense.expense_date <= month_end
+    ).order_by(Expense.expense_date.desc(), Expense.created_at.desc()).all()
+
     instructions = """
 あなたは20年以上の経験を持つ優秀なファイナンシャルプランナーです。
 ユーザーの目標を達成するために必要な指導を具体的に提示してください。
 
 * 分析内容
 - 目標支出金額と現在の支出額を比較し、目標とどれだけ差があるか確認する
+- カテゴリ別の支出割合を分析し、どのカテゴリに削減余地があるか具体的に指摘する
+- 直近の支出履歴から支出パターンや傾向を読み取り、改善ポイントを提示する
 - 目標からオーバーしてしまった場合は、辛口で指導する
-- 目標から遠い場合も厳しく指導する
 
 * トーン
 """
-    
+
     if coach == "devil":
         instructions += "- 全体的に厳しい口調でユーザーに接する\n- 忖度なしで意見を述べる"
     else:
         instructions += "- 優しく励ます口調でユーザーに接する\n- ポジティブなアドバイスを心がける"
-    
+
+    # カテゴリ別支出テキスト
+    category_lines = ""
+    if category_data:
+        category_lines = "\n【カテゴリ別支出】\n"
+        for row in category_data:
+            category_lines += f"- {row.category_name}: {int(row.category_total):,}円\n"
+
+    # 直近の支出履歴テキスト
+    history_lines = ""
+    if recent_expenses:
+        history_lines = "\n【今月の支出履歴】\n"
+        for e in recent_expenses:
+            cat_name = e.category.name if e.category else "未分類"
+            history_lines += f"- {e.expense_date.strftime('%m/%d')} {e.item} {e.price:,}円（{cat_name}）\n"
+
     input_text = f"""
 目標支出額{budget:,}円に対して、今月{total:,}円使用しています。
-目標支出額内に抑えられるための具体例を3つ提示してください。
+{category_lines}{history_lines}
+上記の支出パターンを踏まえ、目標支出額内に抑えるための具体的なアドバイスを3つ提示してください。
 """
     
     try:

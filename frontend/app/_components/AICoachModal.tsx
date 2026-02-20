@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { X } from 'lucide-react';
@@ -16,6 +16,13 @@ type Props = {
 export function AICoachModal({ open, onClose, coachMode }: Props) {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // モーダルを開くたびに前回の分析結果をリセット
+  useEffect(() => {
+    if (open) {
+      setAiAnalysis(null);
+    }
+  }, [open]);
 
   const handleStartAnalysis = async () => {
     setIsAnalyzing(true);
@@ -57,7 +64,7 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
           <h3 className="font-bold text-[16px] text-[#2a3449]">今月の分析</h3>
           {aiAnalysis ? (
             <>
-              <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] max-h-[400px] overflow-y-auto prose prose-sm max-w-none">
+              <div className="bg-[#f7f6f5] rounded-[16px] px-[20px] py-[20px] overflow-y-auto prose max-w-none prose-headings:text-[#2a3449] prose-headings:text-[15px] prose-headings:mt-[16px] prose-headings:mb-[8px] prose-p:text-[14px] prose-p:leading-[1.8] prose-p:text-[#3a3a3a] prose-p:my-[8px] prose-li:text-[14px] prose-li:leading-[1.8] prose-li:text-[#3a3a3a] prose-li:my-[4px] prose-strong:text-[#2a3449] prose-ul:my-[8px] prose-ol:my-[8px]">
                 <ReactMarkdown>
                   {aiAnalysis}
                 </ReactMarkdown>
