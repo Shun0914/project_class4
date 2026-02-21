@@ -166,7 +166,7 @@ def register_expense(
 ):
 
     try:
-        user_id = current_user.id
+        user_id = current_user.id 
 
         saved = insert_expense_record(
             user_id=user_id,
