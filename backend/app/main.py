@@ -9,6 +9,7 @@ from app.routers import auth
 from app.routers import budget
 from app.routers.expense import router as expense_router
 from app.routers import nearShops
+from app.routers import dashboard
 
 from app.models.user import User
 from app.models.expense import Expense
@@ -63,6 +64,7 @@ app.include_router(analyze.router)
 app.include_router(budget.router)
 app.include_router(expense_router, prefix="/expenses")
 app.include_router(nearShops.router)
+app.include_router(dashboard.router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():

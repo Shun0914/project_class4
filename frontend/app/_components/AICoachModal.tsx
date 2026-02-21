@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { get } from '@/lib/api/client';
 import type { AIAnalyzeResponse } from '@/lib/types/analyze';
@@ -16,6 +17,13 @@ type Props = {
 export function AICoachModal({ open, onClose, coachMode }: Props) {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // モーダルを開くたびに前回の分析結果をリセット
+  useEffect(() => {
+    if (open) {
+      setAiAnalysis(null);
+    }
+  }, [open]);
 
   const handleStartAnalysis = async () => {
     setIsAnalyzing(true);
@@ -34,15 +42,26 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div 
-        className="absolute inset-0 bg-black/40" 
-        onClick={onClose}
-      />
-      <div className="relative bg-[#fffdf2] rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]">
+    <AnimatePresence>
+      {open && (
+        <div key="aicoach-modal-root" className="fixed inset-0 z-50 flex items-end justify-center">
+          <motion.div
+            key="aicoach-overlay"
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            key="aicoach-content"
+            className="relative bg-[#fffdf2] rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          >
         <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] bg-white shrink-0">
           <div className="w-[40px]" />
           <h2 className="font-bold text-[#2a3449] text-[20px]">AIコーチ分析</h2>
@@ -57,7 +76,7 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
           <h3 className="font-bold text-[16px] text-[#2a3449]">今月の分析</h3>
           {aiAnalysis ? (
             <>
-              <div className="bg-[#f7f6f5] rounded-[16px] px-[16px] py-[20px] max-h-[400px] overflow-y-auto prose prose-sm max-w-none">
+              <div className="bg-[#f7f6f5] rounded-[16px] px-[20px] py-[20px] overflow-y-auto prose max-w-none prose-headings:text-[#2a3449] prose-headings:text-[15px] prose-headings:mt-[16px] prose-headings:mb-[8px] prose-p:text-[14px] prose-p:leading-[1.8] prose-p:text-[#3a3a3a] prose-p:my-[8px] prose-li:text-[14px] prose-li:leading-[1.8] prose-li:text-[#3a3a3a] prose-li:my-[4px] prose-strong:text-[#2a3449] prose-ul:my-[8px] prose-ol:my-[8px]">
                 <ReactMarkdown>
                   {aiAnalysis}
                 </ReactMarkdown>
@@ -109,7 +128,9 @@ export function AICoachModal({ open, onClose, coachMode }: Props) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
