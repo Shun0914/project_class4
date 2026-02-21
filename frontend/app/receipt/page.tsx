@@ -37,7 +37,7 @@ export default function ReceiptPage() {
     formData.append('file', image);
 
     try {
-      const response = await fetch('http://localhost:8000/receipt/analyze', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/receipt/analyze`, {
         method: 'POST',
         body: formData,
       });
@@ -84,7 +84,7 @@ export default function ReceiptPage() {
           category_id: 1, // 仮のカテゴリID
         };
 
-        const res = await fetch('http://localhost:8000/expenses', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/expenses`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json', 
