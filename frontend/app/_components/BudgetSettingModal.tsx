@@ -220,12 +220,12 @@ export function BudgetSettingModal({
             <div className="flex-1 overflow-y-auto px-[16px] py-[24px] space-y-5">
               {/* 年月 */}
               <div className="flex flex-col gap-[6px]">
-                <label className="font-bold text-[16px] text-[#2a3449]">年月</label>
+                <label className="font-bold text-[16px] text-[#2a3449]">設定する月</label>
                 <button
                   onClick={openPicker}
-                  className="w-full text-left px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] bg-white text-[16px] text-[#2a3449]"
+                  className="w-full text-left px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] bg-white text-[18px] text-[#2a3449]"
                 >
-                  {year}年{month}月
+                  {year}年 {month}月
                 </button>
               </div>
 
@@ -249,7 +249,7 @@ export function BudgetSettingModal({
                       setBudgetValue(numeric)
                     }}
                     placeholder="10,000"
-                    className="no-spinner w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] bg-white text-[16px] outline-none focus:border-[#eb6b15]"
+                    className="no-spinner w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] bg-white text-[18px] text-[#2a3449] text-right outline-none focus:border-[#eb6b15]"
                   />
                   <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[16px] text-[#7c7a78]">
                     円
