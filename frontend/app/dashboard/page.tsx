@@ -178,7 +178,7 @@ export default function DashboardPage() {
       <AICoachModal 
         open={isAIModalOpen} 
         onClose={() => setIsAIModalOpen(false)} 
-        coachMode={(user?.coach_mode === 'devil' ? 'demon' : user?.coach_mode) || 'demon'}
+        coachMode={((user?.coach_mode === 'devil' ? 'demon' : user?.coach_mode) || 'demon') as 'angel' | 'demon'}
       />
 
       {/* 浮遊アクションボタン (FAB): 支出登録ショートカット */}
