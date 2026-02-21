@@ -114,12 +114,13 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const handleSave = async () => {
     if (!item || !price) {
       setSnack({ kind: 'error', message: '項目と金額を入力してください' });
-      // カテゴリが未選択（0）の場合にバリデーションを追加
-      if (categoryId === 0) {
-      setSnack({ kind: 'error', message: 'カテゴリを選択してください' });
-      }
       return;
     }
+    // 必須項目が指定されていない場合のバリデーションを追加
+       if (categoryId === 0) {
+       setSnack({ kind: 'error', message: 'カテゴリを選択してください' });
+       return;
+     }
 
     setSaving(true);
     try {
@@ -317,12 +318,14 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
         </div>
       )}
 
-      <Snackbar 
-        key="modal-snack"
-        message={snack?.message ?? null} 
-        kind={snack?.kind ?? 'success'} 
-        onClose={() => setSnack(null)} 
-      />
+      <div className="z-[1000]">
+        <Snackbar 
+          key="modal-snack"
+          message={snack?.message ?? null} 
+          kind={snack?.kind ?? 'success'} 
+          onClose={() => setSnack(null)} 
+        />
+    </div>
     </AnimatePresence>
   );
 }
