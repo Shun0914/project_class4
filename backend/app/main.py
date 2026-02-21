@@ -8,6 +8,8 @@ from app.routers import analyze
 from app.routers import auth
 from app.routers import budget
 from app.routers.expense import router as expense_router
+from app.routers import nearShops
+from app.routers import dashboard
 
 from app.models.user import User
 from app.models.expense import Expense
@@ -19,22 +21,41 @@ from app.models.receipt_image import ReceiptImage
 from app.models.keyword import Keyword
 from app.routers import receipt
 
+# Google map 問合せ用
+from app.core.client import HttpClientHolder, cms
+from contextlib import asynccontextmanager
+import httpx
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # アプリ起動時の処理: クライアントを作成（コネクションプール開始）
+    cms.client = httpx.AsyncClient(
+        timeout=10.0,
+        limits=httpx.Limits(),
+    )
+    yield
+    # アプリ終了時の処理: クライアントを閉じる
+    if cms.client:
+        await cms.client.aclose()
+
+
 
 app = FastAPI(
     title="おかねのコーチ API",
     description="AIコーチ付き家計簿アプリ おかねのコーチ のAPI",
-    version="0.1.0"
-)
+    version="0.1.0",
+    lifespan=lifespan)
 
 # CORS設定（フロントエンドからのリクエストを許可）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://host.docker.internal:3000/",
         "https://tech0-gen-11-step3-2-node-67.azurewebsites.net",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
@@ -43,6 +64,8 @@ app.include_router(auth.router)
 app.include_router(analyze.router)
 app.include_router(budget.router)
 app.include_router(expense_router, prefix="/expenses")
+app.include_router(nearShops.router)
+app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(receipt.router)
 
 # --- (たも）ここから追加：サーバー起動時に自動でカテゴリーを用意する仕組み ---

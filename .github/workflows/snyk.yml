@@ -1,4 +1,4 @@
-# Snyk 脆弱性スキャン（push/PR 時に自動実行）
+# Snyk 脆弱性スキャン（一時停止中：手動実行のみ。再開時は push/pull_request を戻す）
 # - 依存関係: test + monitor（スナップショット送信。GitHub 連携側で Fix/Backlog PR 運用する想定）
 # - コード: Snyk Code でスキャンし、結果を Issue 1 件自動作成
 # 事前に GitHub Secrets に SNYK_TOKEN を登録してください。
@@ -6,12 +6,7 @@
 name: Snyk security scan
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:  # 手動実行のみ（push/PR 時は動かない）
 
 jobs:
   snyk-frontend:
