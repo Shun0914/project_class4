@@ -1,3 +1,5 @@
+// frontend/app/_components/ExpenseInputModal.tsx
+
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -22,6 +24,11 @@ type Props = {
   onSuccess?: () => void;
 };
 
+type NearShop = {
+  name?: string;
+  // 他のフィールドが来てもOK（この画面では使わない）
+};
+
 export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   // 日付の状態を Date オブジェクトで管理
   const [date, setDate] = useState(new Date());
@@ -31,6 +38,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const [categoryId, setCategoryId] = useState(1);
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
+  const [priceFocused, setPriceFocused] = useState(false);
+
+  // 近くにある店舗名
+  const [nearShopNames, setNearShopNames] = useState<string[]>([]);
 
   // 表示用の日付フォーマット (Figma再現)
   const formatDateForDisplay = (d: Date) => {
@@ -39,7 +50,53 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     const day = d.getDate();
     const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
     const weekDay = weekDays[d.getDay()];
-    return `${year}年${month}月${day}日 (${weekDay})`;
+    return `${year}年 ${month}月 ${day}日 (${weekDay})`;
+  };
+
+  // 位置情報 → /api/nearShops(POST) → name
+  const fetchNearShops = async (isActive: () => boolean) => {
+    try {
+      // 位置情報（必須）
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('geolocation unavailable'));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 0,
+        });
+      });
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      const token = localStorage.getItem('access_token');    // token（バックエンドで検証不要）
+
+      // Next.js Route Handler に投げる（他のAPI呼び出し処理とセンス統一）
+      const res = await fetch('/api/nearShops', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ lat, lng }),
+      });
+
+      if (!res.ok) return;
+
+      const data: NearShop[] = await res.json();
+
+      const names = (Array.isArray(data) ? data : [])
+        .map((x) => (x?.name ?? '').trim())
+        .filter((name) => name.length > 0)
+        .slice(0, 3);
+
+      if (!isActive()) return; // モーダルが閉じた後の反映を防ぐ
+      setNearShopNames(names);
+    } catch {
+      // 取得中/エラー時は「何も出さない」方針なので握りつぶす
+      if (!isActive()) return;
+      setNearShopNames([]);
+    }
   };
 
   useEffect(() => {
@@ -50,7 +107,14 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       setCategoryId(1);
       setSaving(false);
       setSnack(null);
-    }
+      const active = { current: true };
+      fetchNearShops(() => active.current);
+      return () => {
+        active.current = false;
+      };
+    } else {
+      setNearShopNames([]);
+    } 
   }, [open]);
 
   const handleSave = async () => {
@@ -97,18 +161,18 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
             onClick={onClose}
           />
 
-          <motion.div 
+          <motion.div
             key="modal-content"
-            className="relative bg-white rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]"
+            className="relative bg-[#fffdf2] rounded-t-[24px] w-full max-w-[390px] shadow-lg overflow-hidden flex flex-col h-[calc(100vh-44px)]"
             initial={{ y: "100%" }} 
             animate={{ y: 0 }} 
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
             {/* ヘッダー (Figma仕様) */}
-            <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] shrink-0">
+            <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] shrink-0 bg-white">
               <div className="w-[40px]" /> {/* バランス調整用 */}
-              <h2 className="font-bold text-[#2a3449] text-[20px]">入力</h2>
+              <h2 className="font-bold text-[#2a3449] text-[20px]">支出入力</h2>
               <button onClick={onClose} className="flex items-center justify-center size-[40px] rounded-full hover:bg-gray-100 transition-colors">
                 <X className="size-[24px] text-[#7C7A78]" />
               </button>
@@ -121,23 +185,59 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                 <label className="font-bold text-[16px] text-[#2a3449]">日付</label>
                 <button
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full px-[16px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] text-[#2a3449] flex items-center justify-between text-left"
+                  className="w-full px-[16px] py-[10px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] text-[#2a3449] flex items-center justify-between text-left"
                 >
                   <span>{formatDateForDisplay(date)}</span>
                   <Calendar className="size-[18px] text-[#7c7a78]" />
                 </button>
               </div>
 
-              {/* 商品名 */}
+              {/* アイテム名 */}
               <div className="flex flex-col gap-[8px]">
-                <label className="font-bold text-[16px] text-[#2a3449]">商品名</label>
-                <input 
+                <label className="font-bold text-[16px] text-[#2a3449]">お店／商品名</label>
+
+                <input
                   name="purchase_item"
-                  value={item} 
-                  onChange={e => setItem(e.target.value)}
-                  className="w-full px-[16px] py-[12px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]" 
-                  placeholder="例）コーヒー"
+                  value={item}
+                  onChange={(e) => setItem(e.target.value)}
+                  className="w-full px-[16px] py-[10px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none bg-white focus:border-[#eb6b15]"
+                  placeholder = "例）スタバ"
                 />
+
+                {/* 上段：店舗選択ボタン（スーパー・コンビニ・カフェ） */}
+                <div className="flex justify-end gap-[8px]">
+                  {["スーパー", "コンビニ", "カフェ"].map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setItem(label)}
+                      className="px-[8px] py-[6px] border-none rounded-[8px] text-[14px] text-[#606972] bg-[#fee] hover:bg-[#f8d8d3]"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 下段：API取得ボタン（最大3・縦並び・右揃え・0件なら表示しない） */}
+                {nearShopNames.length > 0 && (
+                  <div className="flex flex-wrap justify-end gap-[8px]">
+                    {nearShopNames.map((name) => {
+                     // 表示用ラベル（5文字超なら省略）
+                      const displayName = name.length > 6 ? name.slice(0, 5) + "…" : name;                    
+                      return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setItem(name)}
+                        className="w-auto max-w-full px-[8px] py-[6px] border-none rounded-[8px] text-[14px] text-[#606972] bg-[#fee] hover:bg-[#f8d8d3]"
+                        title={name}
+                      >
+                        {displayName}
+                      </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* 金額 */}
@@ -160,7 +260,8 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                       const numeric = e.target.value.replace(/[^\d]/g, "");
                       setPrice(numeric)
                     }}
-                    className="w-full px-[16px] py-[12px] pr-[40px] border border-[#e2e9f2] rounded-[8px] text-[16px] outline-none focus:border-[#eb6b15]" 
+                    className="w-full px-[16px] py-[9px] pr-[40px] border border-[#e2e9f2] rounded-[8px] text-[18px] text-[#2a3449] text-right outline-none bg-white focus:border-[#eb6b15]" 
+                    placeholder="0"
                   />
                   <span className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[16px] text-[#7c7a78]">円</span>
                 </div>
@@ -174,7 +275,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                   <select 
                     value={categoryId} 
                     onChange={e => setCategoryId(Number(e.target.value))}
-                    className="w-full pl-[32px] pr-[40px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] appearance-none outline-none focus:border-[#eb6b15]"
+                    className="w-full pl-[32px] pr-[40px] py-[10px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] text-[#2a3449] appearance-none outline-none focus:border-[#eb6b15]"
                   >
                     {CATEGORY_MAP.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
