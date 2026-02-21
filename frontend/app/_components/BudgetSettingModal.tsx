@@ -307,12 +307,14 @@ export function BudgetSettingModal({
         </div>
       )}
 
-      <Snackbar
-        key="budget-snack"
-        message={snack?.message ?? null}
-        kind={snack?.kind ?? 'success'}
-        onClose={() => setSnack(null)}
-      />
+      <div className="z-[1000]"> {/* Snackbar を最前面に表示 */}
+        <Snackbar
+          key="budget-snack"
+          message={snack?.message ?? null}
+          kind={snack?.kind ?? 'success'}
+          onClose={() => setSnack(null)}
+        />
+      </div>
     </AnimatePresence>
   );
 }
