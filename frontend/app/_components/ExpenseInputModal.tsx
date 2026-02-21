@@ -27,7 +27,8 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
-  const [categoryId, setCategoryId] = useState<number>(0);//categoryId の初期値を 0 または空文字にする（未選択状態）
+  const [categoryId, setCategoryId] = useState<number>(10); 
+  //categoryId の初期値を 10(その他)に変更しました。
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [priceFocused, setPriceFocused] = useState(false);
@@ -96,7 +97,8 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       setDate(new Date());
       setItem('');
       setPrice('');
-      setCategoryId(0);//モーダルを開いた時に 0 (未選択) にリセット
+      // setCategoryId(0);       // モーダルを開いた時に 0 (未選択) にリセット
+      // ↑ 必須操作数を減らしたいため、コメントアウトして前回値保持にします。
       setSaving(false);
       setSnack(null);
       const active = { current: true };
@@ -112,11 +114,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const handleSave = async () => {
     if (!item || !price) {
       setSnack({ kind: 'error', message: '項目と金額を入力してください' });
-      return;
-    }
-    // カテゴリが未選択（0）の場合にバリデーションを追加
-    if (!item || !price || categoryId === 0) {
+      // カテゴリが未選択（0）の場合にバリデーションを追加
+      if (categoryId === 0) {
       setSnack({ kind: 'error', message: 'カテゴリを選択してください' });
+      }
       return;
     }
 
@@ -210,7 +211,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                     <button
                       key={label}
                       type="button"
-                      onClick={() => setItem(label)}
+                      onClick={() => {
+                        setItem(label)
+                        setCategoryId(1); // カテゴリを食費に自動セット
+                      }}
                       className="px-[8px] py-[6px] border-none rounded-[8px] text-[14px] text-[#606972] bg-[#fee] hover:bg-[#f8d8d3]"
                     >
                       {label}
