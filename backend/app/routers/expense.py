@@ -21,7 +21,7 @@ from app.core.security import get_current_user
 from app.schemas.expense import ExpenseCreateRequest
 
 
-router = APIRouter()
+router = APIRouter(tags=["支出"])
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
