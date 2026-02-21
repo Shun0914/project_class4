@@ -20,3 +20,6 @@ class ExpenseResponse(BaseModel):
 class ExpenseListResponse(BaseModel):
     expenses: List[ExpenseResponse]
 
+# 更新リクエスト（構造はCreateと同じ）
+ExpenseUpdateRequest = ExpenseCreateRequest
+
