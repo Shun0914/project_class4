@@ -12,7 +12,6 @@ import { HistoryModal } from "./_components/HistoryModal";
 import { BudgetSettingModal } from "./_components/BudgetSettingModal";
 import { AICoachModal } from "./_components/AICoachModal";
 
-
 export default function HomePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -46,8 +45,9 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fffdf2]">
-        <p className="text-[#6a7282]">読み込み中...</p>
+      //<div className="flex min-h-screen items-center justify-center bg-[#fffdf2]">
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,rgb(255,253,242)_0%,rgb(255,252,239)_45%,rgb(255,242,234)_100%)]">
+      <p className="text-[#6a7282]">読み込み中...</p>
       </div>
     );
   }
@@ -64,7 +64,8 @@ export default function HomePage() {
                    today.getHours() < 18 ? 'こんにちは' : 'こんばんは';
 
   return (
-    <div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[#fffdf2]">
+    //<div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[#fffdf2]">
+    <div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[linear-gradient(180deg,rgb(255,253,242)_0%,rgb(255,252,239)_45%,rgb(255,242,234)_100%)]">
       <div className="flex-1 overflow-y-auto px-[16px] pt-[10px] pb-[120px]">
         <div className="flex flex-col gap-[16px] w-full">
           {/* Greeting */}

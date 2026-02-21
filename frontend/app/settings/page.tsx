@@ -114,7 +114,8 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fffdf2]">
+      //<div className="flex min-h-screen items-center justify-center bg-[#fffdf2]">
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,rgb(255,253,242)_0%,rgb(255,252,239)_45%,rgb(255,242,234)_100%)]">
         <p className="text-[#6a7282]">読み込み中...</p>
       </div>
     );
@@ -126,7 +127,7 @@ export default function SettingsPage() {
   const reportLabel = user.report_enabled ? '有効' : '無効';
 
   return (
-    <div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[#fffdf2]">
+    <div className="flex flex-col h-screen w-full max-w-[390px] mx-auto relative overflow-hidden bg-[linear-gradient(180deg,rgb(255,253,242)_0%,rgb(255,252,239)_45%,rgb(255,242,234)_100%)]">
       {/* ヘッダー */}
       <div className="px-[16px] pt-[60px] pb-4">
         <h1 className="text-xl font-bold text-[#423f3e]">設定</h1>
