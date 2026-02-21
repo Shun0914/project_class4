@@ -1,5 +1,5 @@
 // frontend/app/_components/CategoryBreakdown.tsx
-import { CATEGORY_CONFIG } from "@/lib/constants/categories";
+import { CATEGORY_CONFIG, getCategoryByName } from "@/lib/constants/categories";
 
 /**
  * カテゴリ別の支出内訳をリスト表示するコンポーネント
@@ -35,7 +35,7 @@ export function CategoryBreakdown({ categories, budget, onHeaderClick }: any) {
               <div className="flex items-center gap-3">
                 <div 
                   className="w-2 h-2 rounded-full" 
-                  style={{ backgroundColor: CATEGORY_CONFIG[cat.name]?.color || '#adb5bd' }} 
+                  style={{ backgroundColor: getCategoryByName(cat.name).color }}
                 />
                 <span className="text-[14px] font-medium text-[#423f3e]">{cat.name}</span>
               </div>

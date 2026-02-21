@@ -6,15 +6,7 @@ import { X, Calendar, ChevronDown } from "lucide-react";
 import { createExpense } from '@/lib/api/expenses';
 import { Snackbar } from './Snackbar';
 import { DateCalendarPicker } from '../../components/DateCalendarPicker';
-
-const CATEGORY_MAP = [
-  { id: 1, name: "未分類", color: "#db3ea4" },
-  { id: 2, name: "食費", color: "#fa4848" },
-  { id: 3, name: "日用品", color: "#fab948" },
-  { id: 4, name: "趣味・娯楽", color: "#48db3e" },
-  { id: 5, name: "交通費", color: "#3ec3db" },
-  { id: 6, name: "水道・光熱費", color: "#483edb" },
-];
+import { CATEGORY_CONFIG, getCategoryById } from '@/lib/constants/categories';
 
 type Props = {
   open: boolean;
@@ -28,7 +20,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
-  const [categoryId, setCategoryId] = useState(1);
+  const [categoryId, setCategoryId] = useState<number>(0);//categoryId の初期値を 0 または空文字にする（未選択状態）
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
@@ -47,7 +39,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       setDate(new Date());
       setItem('');
       setPrice('');
-      setCategoryId(1);
+      setCategoryId(0);//モーダルを開いた時に 0 (未選択) にリセット
       setSaving(false);
       setSnack(null);
     }
@@ -56,6 +48,11 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
   const handleSave = async () => {
     if (!item || !price) {
       setSnack({ kind: 'error', message: '項目と金額を入力してください' });
+      return;
+    }
+    // カテゴリが未選択（0）の場合にバリデーションを追加
+    if (!item || !price || categoryId === 0) {
+      setSnack({ kind: 'error', message: 'カテゴリを選択してください' });
       return;
     }
 
@@ -82,7 +79,10 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     }
   };
 
-  const currentCategoryColor = CATEGORY_MAP.find(c => c.id === categoryId)?.color;
+  //categoryId が 0 の時はグレーなどのデフォルト色を表示
+  const currentCategoryColor = categoryId === 0 
+    ? "#adb5bd" 
+    : getCategoryById(categoryId).color;
 
   return (
     <AnimatePresence>
@@ -176,8 +176,13 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                     onChange={e => setCategoryId(Number(e.target.value))}
                     className="w-full pl-[32px] pr-[40px] py-[12px] bg-white border border-[#e2e9f2] rounded-[8px] text-[16px] appearance-none outline-none focus:border-[#eb6b15]"
                   >
-                    {CATEGORY_MAP.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    {/* 初期表示用の未選択オプション */}
+                    <option value={0} disabled className="text-gray-400">選択してください</option>
+                    {/* ★修正: CATEGORY_CONFIG から動的に option を生成 */}
+                    {Object.entries(CATEGORY_CONFIG).map(([name, config]) => (
+                      <option key={config.id} value={config.id}>
+                        {name}
+                      </option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-[12px] top-1/2 -translate-y-1/2 size-[20px] text-gray-400 pointer-events-none" />
