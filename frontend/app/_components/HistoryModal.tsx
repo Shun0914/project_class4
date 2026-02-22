@@ -4,15 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, SlidersHorizontal, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { getExpenses, type ExpenseItem } from '@/lib/api/expenses';
+import { CATEGORY_CONFIG, getCategoryById } from '@/lib/constants/categories';
 
-const CATEGORY_MAP = [
-  { id: 1, name: "未分類", color: "#db3ea4" },
-  { id: 2, name: "食費", color: "#fa4848" },
-  { id: 3, name: "日用品", color: "#fab948" },
-  { id: 4, name: "趣味・娯楽", color: "#48db3e" },
-  { id: 5, name: "交通費", color: "#3ec3db" },
-  { id: 6, name: "水道・光熱費", color: "#483edb" },
-];
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -47,8 +40,9 @@ function groupByDate(expenses: ExpenseItem[]): GroupedExpenses[] {
   return groups;
 }
 
+// ★修正: 共通ユーティリティ getCategoryById を使用するように変更
 function getCategoryColor(categoryId: number | null): string {
-  return CATEGORY_MAP.find(c => c.id === categoryId)?.color ?? "#9ca3af";
+  return getCategoryById(categoryId).color;
 }
 
 export function HistoryModal({ open, onClose, onAddExpense, onEditExpense, refreshKey }: Props) {
@@ -100,7 +94,7 @@ export function HistoryModal({ open, onClose, onAddExpense, onEditExpense, refre
   // 支出登録後の自動リフレッシュ
   useEffect(() => {
     if (open && refreshKey) fetchData();
-  }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshKey, open, fetchData]); // ★修正: 依存関係を整理
 
   const handlePrevMonth = () => {
     if (month === 1) { setYear(y => y - 1); setMonth(12); }
@@ -332,21 +326,21 @@ export function HistoryModal({ open, onClose, onAddExpense, onEditExpense, refre
                   <div className="flex-1 overflow-y-auto px-[16px] py-[16px]">
                     {filterTab === 'category' ? (
                       <div className="flex flex-col gap-[4px]">
-                        {CATEGORY_MAP.map(cat => {
-                          const checked = selectedCategories.has(cat.id);
+                        {Object.entries(CATEGORY_CONFIG).map(([name, config]) => {
+                          const checked = selectedCategories.has(config.id);
                           return (
                             <button
-                              key={cat.id}
+                              key={config.id}
                               onClick={() => {
                                 const next = new Set(selectedCategories);
-                                if (checked) next.delete(cat.id);
-                                else next.add(cat.id);
+                                if (checked) next.delete(config.id);
+                                else next.add(config.id);
                                 setSelectedCategories(next);
                               }}
                               className="flex items-center gap-[12px] px-[12px] py-[12px] rounded-[8px] hover:bg-gray-50 transition-colors"
                             >
-                              <span className="size-[10px] rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                              <span className="flex-1 text-[14px] text-[#2a3449] text-left">{cat.name}</span>
+                              <span className="size-[10px] rounded-full shrink-0" style={{ backgroundColor: config.color }} />
+                              <span className="flex-1 text-[14px] text-[#2a3449] text-left">{name}</span>
                               <div className={`size-[22px] rounded-[4px] border-2 flex items-center justify-center transition-colors ${
                                 checked ? 'bg-[#eb6b15] border-[#eb6b15]' : 'border-[#d1d5db]'
                               }`}>
