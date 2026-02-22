@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, ChevronDown } from "lucide-react";
-import { createExpense } from '@/lib/api/expenses';
+import { createExpense, updateExpense, deleteExpense, type ExpenseItem } from '@/lib/api/expenses';
 import { Snackbar } from './Snackbar';
 import { DateCalendarPicker } from '../../components/DateCalendarPicker';
 import { CATEGORY_CONFIG, getCategoryById } from '@/lib/constants/categories';
@@ -14,6 +14,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  editingExpense?: ExpenseItem | null;
 };
 
 type NearShop = {
@@ -21,14 +22,13 @@ type NearShop = {
   // 他のフィールドが来てもOK（この画面では使わない）
 };
 
-export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
+export function ExpenseInputModal({ open, onClose, onSuccess, editingExpense }: Props) {
   // 日付の状態を Date オブジェクトで管理
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
-  const [categoryId, setCategoryId] = useState<number>(10); 
-  //categoryId の初期値を 10(その他)に変更しました。
+  const [categoryId, setCategoryId] = useState<number>(1); 
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [priceFocused, setPriceFocused] = useState(false);
@@ -94,11 +94,18 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
 
   useEffect(() => {
     if (open) {
-      setDate(new Date());
-      setItem('');
-      setPrice('');
-      // setCategoryId(0);       // モーダルを開いた時に 0 (未選択) にリセット
-      // ↑ 必須操作数を減らしたいため、コメントアウトして前回値保持にします。
+      if (editingExpense) {
+        const d = new Date(editingExpense.expense_date + "T00:00:00");
+        setDate(d);
+        setItem(editingExpense.item);
+        setPrice(String(editingExpense.price));
+        setCategoryId(editingExpense.category_id ?? 1);
+      } else {
+        setDate(new Date());
+        setItem('');
+        setPrice('');
+        setCategoryId(1);
+      }
       setSaving(false);
       setSnack(null);
       const active = { current: true };
@@ -109,7 +116,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     } else {
       setNearShopNames([]);
     } 
-  }, [open]);
+  }, [open, editingExpense]);
 
   const handleSave = async () => {
     if (!item || !price) {
@@ -117,8 +124,8 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       return;
     }
     // 必須項目が指定されていない場合のバリデーションを追加
-       if (categoryId === 0) {
-       setSnack({ kind: 'error', message: 'カテゴリを選択してください' });
+       if (!item || !price || categoryId === 0) {
+       setSnack({ kind: 'error', message: '項目を選択してください' });
        return;
      }
 
@@ -129,15 +136,20 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
       const m = String(date.getMonth() + 1).padStart(2, '0');
       const d = String(date.getDate()).padStart(2, '0');
 
-      await createExpense({
+      const payload = {
         item,
         price: Number(price),
         expense_date: `${y}-${m}-${d}`,
         category_id: categoryId,
-      });
-      setSnack({ kind: 'success', message: '登録完了' });
+      };
+
+      if (editingExpense) {
+        await updateExpense(editingExpense.id, payload);
+      } else {
+        await createExpense(payload);
+      }
       onSuccess?.();
-      setTimeout(onClose, 1500);
+      onClose();
     } catch (e) {
       setSnack({ kind: 'error', message: '保存に失敗しました' });
     } finally {
@@ -145,7 +157,21 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
     }
   };
 
-  //categoryId が 0 の時はグレーなどのデフォルト色を表示
+  const handleDelete = async () => {
+    if (!editingExpense) return;
+    setSaving(true);
+    try {
+      await deleteExpense(editingExpense.id);
+      onSuccess?.();
+      onClose();
+    } catch (e) {
+      setSnack({ kind: 'error', message: '削除に失敗しました' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // IDが 0 (未選択) の場合はグレーを表示し、それ以外は設定から色を取得します
   const currentCategoryColor = categoryId === 0 
     ? "#adb5bd" 
     : getCategoryById(categoryId).color;
@@ -174,7 +200,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
             {/* ヘッダー (Figma仕様) */}
             <div className="flex items-center justify-between px-[16px] py-[20px] w-full border-b border-[#e2e9f2] shrink-0 bg-white">
               <div className="w-[40px]" /> {/* バランス調整用 */}
-              <h2 className="font-bold text-[#2a3449] text-[20px]">支出入力</h2>
+              <h2 className="font-bold text-[#2a3449] text-[20px]">{editingExpense ? '編集' : '入力'}</h2>
               <button onClick={onClose} className="flex items-center justify-center size-[40px] rounded-full hover:bg-gray-100 transition-colors">
                 <X className="size-[24px] text-[#7C7A78]" />
               </button>
@@ -214,7 +240,7 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
                       type="button"
                       onClick={() => {
                         setItem(label)
-                        setCategoryId(1); // カテゴリを食費に自動セット
+                        setCategoryId(2); // カテゴリを食費に自動セット
                       }}
                       className="px-[8px] py-[6px] border-none rounded-[8px] text-[14px] text-[#606972] bg-[#fee] hover:bg-[#f8d8d3]"
                     >
@@ -296,14 +322,23 @@ export function ExpenseInputModal({ open, onClose, onSuccess }: Props) {
               </div>
             </div>
 
-            {/* 保存ボタン */}
-            <div className="px-[16px] py-[16px] border-t border-[#e2e9f2] shrink-0">
-              <button 
-                onClick={handleSave} 
+            {/* 削除・保存ボタン */}
+            <div className="px-[16px] py-[16px] border-t border-[#e2e9f2] shrink-0 space-y-3">
+              {editingExpense && (
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="w-full bg-white text-[#f13434] font-bold py-[16px] rounded-[8px] border border-[#f13434] hover:bg-red-50 disabled:opacity-50 transition-colors text-[16px]"
+                >
+                  削除する
+                </button>
+              )}
+              <button
+                onClick={handleSave}
                 disabled={saving}
                 className="w-full bg-[#eb6b15] text-white font-bold py-[16px] rounded-[8px] hover:bg-[#d15a0a] disabled:opacity-50 transition-colors text-[16px]"
               >
-                {saving ? '保存中...' : '保存する'}
+                {saving ? '保存中...' : editingExpense ? '更新する' : '保存する'}
               </button>
             </div>
           </motion.div>

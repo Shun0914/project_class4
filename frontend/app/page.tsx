@@ -8,8 +8,10 @@ import BottomNav from '@/lib/components/BottomNav';
 import { get } from '@/lib/api/client';
 import type { AnalyzeResponse } from '@/lib/types/analyze';
 import { ExpenseInputModal } from "./_components/ExpenseInputModal";
+import { type ExpenseItem } from '@/lib/api/expenses';
 import { HistoryModal } from "./_components/HistoryModal";
 import { BudgetSettingModal } from "./_components/BudgetSettingModal";
+import Link from 'next/link';
 import { AICoachModal } from "./_components/AICoachModal";
 
 export default function HomePage() {
@@ -21,6 +23,7 @@ export default function HomePage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null);
 
 
   useEffect(() => {
@@ -172,15 +175,19 @@ export default function HomePage() {
           {/* Action Buttons */}
           <div className="grid grid-cols-3 gap-[12px] mt-[-6px]">
             <button 
-                onClick={() => setIsInputOpen(true)}
+                onClick={() => { setEditingExpense(null); setIsInputOpen(true); }}
                 className="bg-white border border-[#f68c44] rounded-[16px] px-[12px] py-[12px] flex flex-col items-center gap-[4px] hover:bg-[#fff5f0] transition-colors shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]">
               <span className="text-[#eb6b15] text-[24px]">+</span>
               <span className="text-[#eb6b15] text-[14px] font-bold whitespace-nowrap">手入力</span>
             </button>
-            <button className="bg-white border border-[#f68c44] rounded-[16px] px-[12px] py-[12px] flex flex-col items-center gap-[4px] hover:bg-[#fff5f0] transition-colors shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]">
+
+            <button 
+              onClick={() => router.push('/receipt')}
+              className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors"> 
               <span className="text-[#eb6b15] text-[24px]">📄</span>
               <span className="text-[#eb6b15] text-[14px] font-bold whitespace-nowrap">レシート読込</span>
             </button>
+
             <button 
               onClick={() => setIsAIModalOpen(true)}
               className="bg-white border border-[#f68c44] rounded-[16px] px-[12px] py-[12px] flex flex-col items-center gap-[4px] hover:bg-[#fff5f0] transition-colors shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]"
@@ -224,7 +231,8 @@ export default function HomePage() {
       <HistoryModal
         open={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
-        onAddExpense={() => setIsInputOpen(true)}
+        onAddExpense={() => { setEditingExpense(null); setIsInputOpen(true); }}
+        onEditExpense={(exp) => { setEditingExpense(exp); setIsInputOpen(true); }}
         refreshKey={historyRefreshKey}
       />
 
@@ -239,11 +247,13 @@ export default function HomePage() {
       {/* ★ 手入力モーダル（内訳モーダルより上に表示されるよう z-[70]） */}
       <ExpenseInputModal
         open={isInputOpen}
-        onClose={() => setIsInputOpen(false)}
+        onClose={() => { setIsInputOpen(false); setEditingExpense(null); }}
         onSuccess={() => {
           setHistoryRefreshKey(k => k + 1);
           fetchAnalyze();
+          setEditingExpense(null);
         }}
+        editingExpense={editingExpense}
       />
 
       {/* フローティングボタン*/}
@@ -251,7 +261,7 @@ export default function HomePage() {
         type="button"
         aria-label="支出を入力"
         className="fixed bottom-[120px] right-[calc(50%-195px+16px+8px)] z-40 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white text-2xl shadow-lg"
-        onClick={() => setIsInputOpen(true)}
+        onClick={() => { setEditingExpense(null); setIsInputOpen(true); }}
       >
         +
       </button>

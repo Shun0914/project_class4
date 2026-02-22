@@ -51,6 +51,25 @@ export type ExpenseListResponse = {
   expenses: ExpenseItem[];
 };
 
+export async function updateExpense(id: number, data: CreateExpenseRequest): Promise<void> {
+  const { put } = await import('@/lib/api/client');
+  await put(`/expenses/${id}`, data);
+}
+
+export async function deleteExpense(id: number): Promise<void> {
+  const token = localStorage.getItem('access_token');
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("削除に失敗しました");
+  }
+}
+
 export async function getExpenses(year: number, month: number): Promise<ExpenseListResponse> {
   const token = localStorage.getItem('access_token');
 

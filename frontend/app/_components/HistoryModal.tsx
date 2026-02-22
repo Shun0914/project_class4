@@ -13,6 +13,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onAddExpense?: () => void;
+  onEditExpense?: (expense: ExpenseItem) => void;
   refreshKey?: number;
 };
 
@@ -44,7 +45,7 @@ function getCategoryColor(categoryId: number | null): string {
   return getCategoryById(categoryId).color;
 }
 
-export function HistoryModal({ open, onClose, onAddExpense, refreshKey }: Props) {
+export function HistoryModal({ open, onClose, onAddExpense, onEditExpense, refreshKey }: Props) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -237,9 +238,10 @@ export function HistoryModal({ open, onClose, onAddExpense, refreshKey }: Props)
                       <p className="text-[#6a7282] text-[12px] font-bold mb-[8px]">{group.dateLabel}</p>
                       <div className="flex flex-col bg-white rounded-[12px] overflow-hidden">
                         {group.items.map((exp, idx) => (
-                          <div
+                          <button
                             key={exp.id}
-                            className={`flex items-center px-[16px] py-[14px] ${idx > 0 ? 'border-t border-[#f3f3f3]' : ''}`}
+                            onClick={() => onEditExpense?.(exp)}
+                            className={`flex items-center px-[16px] py-[14px] w-full text-left hover:bg-gray-50 transition-colors cursor-pointer ${idx > 0 ? 'border-t border-[#f3f3f3]' : ''}`}
                           >
                             <span
                               className="size-[10px] rounded-full shrink-0 mr-[12px]"
@@ -249,7 +251,7 @@ export function HistoryModal({ open, onClose, onAddExpense, refreshKey }: Props)
                             <span className="text-[14px] font-bold text-[#2a3449] ml-[8px] whitespace-nowrap">
                               {exp.price.toLocaleString()}円
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
