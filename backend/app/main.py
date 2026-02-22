@@ -28,6 +28,24 @@ import httpx
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # --- （たも）ここから追加：サーバー起動時に自動でカテゴリーを用意する ---
+    try:
+        sql = text("""
+            INSERT IGNORE INTO categories (id, name) 
+            VALUES 
+            (1, '未分類'),
+            (2, '食費'), 
+            (3, '日用品'), 
+            (4, '交通費'), 
+            (5, 'その他')
+        """)
+        with engine.begin() as conn:
+            conn.execute(sql)
+        print("✅ 起動チェック: カテゴリーデータの準備OK！")
+    except Exception as e:
+        print(f"⚠️ カテゴリーデータの準備をスキップしました (詳細: {e})")
+    # --- （たも）ここまで追加 ---
+    
     # アプリ起動時の処理: クライアントを作成（コネクションプール開始）
     cms.client = httpx.AsyncClient(
         timeout=10.0,
@@ -68,26 +86,6 @@ app.include_router(nearShops.router)
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(receipt.router)
 
-# --- (たも）ここから追加：サーバー起動時に自動でカテゴリーを用意する仕組み ---
-@app.on_event("startup")
-def startup_event():
-    try:
-        # MySQLの機能「INSERT IGNORE」を使って、すでにデータがあれば何もしない、無ければ入れる
-        sql = text("""
-            INSERT IGNORE INTO categories (id, name) 
-            VALUES 
-            (1, '未分類'),  # ←★ 1番を「未分類」にしておく！
-            (2, '食費'), 
-            (3, '日用品'), 
-            (4, '交通費'), 
-            (5, 'その他')
-        """)
-        with engine.begin() as conn:
-            conn.execute(sql)
-        print("✅ 起動チェック: カテゴリーデータの準備OK！")
-    except Exception as e:
-        print(f"⚠️ カテゴリーデータの準備をスキップしました (詳細: {e})")
-# --- （たも）ここまで追加 ---
 
 @app.get("/")
 def read_root():
