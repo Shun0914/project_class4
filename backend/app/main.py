@@ -29,6 +29,7 @@ import httpx
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- （たも）ここから追加：サーバー起動時に自動でカテゴリーを用意する ---
+    # --- （Yoko）画面上のカテゴリに合わせて修正 ---
     try:
         sql = text("""
             INSERT IGNORE INTO categories (id, name) 
@@ -36,8 +37,9 @@ async def lifespan(app: FastAPI):
             (1, '未分類'),
             (2, '食費'), 
             (3, '日用品'), 
-            (4, '交通費'), 
-            (5, 'その他')
+            (4, '趣味・娯楽'), 
+            (5, '交通費'),
+            (6, '水道・光熱費')
         """)
         with engine.begin() as conn:
             conn.execute(sql)
