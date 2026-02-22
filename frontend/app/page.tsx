@@ -183,7 +183,7 @@ export default function HomePage() {
 
             <button 
               onClick={() => router.push('/receipt')}
-              className="bg-white border-2 border-[#eb6b15] rounded-[12px] p-[16px] flex flex-col items-center gap-[8px] hover:bg-[#fff5f0] transition-colors"> 
+              className="bg-white border border-[#f68c44] rounded-[16px] px-[12px] py-[12px] flex flex-col items-center gap-[4px] hover:bg-[#fff5f0] transition-colors shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)]">
               <span className="text-[#eb6b15] text-[24px]">📄</span>
               <span className="text-[#eb6b15] text-[14px] font-bold whitespace-nowrap">レシート読込</span>
             </button>
